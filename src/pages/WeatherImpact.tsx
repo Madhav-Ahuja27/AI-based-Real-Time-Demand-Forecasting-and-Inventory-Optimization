@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { fetchProducts, fetchWeatherData, fetchProductForecast } from "@/lib/mock-api";
 import { WeatherData, Product, Forecast } from "@/lib/mock-data";
@@ -59,10 +58,8 @@ export default function WeatherImpact() {
     }
   }, [selectedProduct]);
 
-  // Filter weather data by location
   const locationWeatherData = weatherData.filter(w => w.locationId === selectedLocation);
   
-  // Create combined data for chart
   const combinedData = locationWeatherData.map(weather => {
     const forecast = forecasts.find(f => f.date === weather.date);
     
@@ -72,17 +69,16 @@ export default function WeatherImpact() {
       temperature: weather.temperature,
       precipitation: weather.precipitation,
       predictedDemand: forecast?.predictedDemand || 0,
-      weatherImpact: weather.impact * 100 // Convert to percentage
+      weatherImpact: weather.impact * 100
     };
   });
 
-  // Sort products by weather sensitivity (using mock values for demonstration)
   const weatherSensitiveProducts = [...products]
-    .sort((a, b) => Math.random() - 0.5) // Sort randomly for demo
+    .sort((a, b) => Math.random() - 0.5)
     .slice(0, 5)
     .map(product => ({
       ...product,
-      weatherImpact: (Math.random() * 2 - 1) * 0.4 // Random value between -40% and 40%
+      weatherImpact: (Math.random() * 2 - 1) * 0.4
     }));
 
   const getWeatherProductImpactClass = (impact: number) => {
@@ -277,91 +273,70 @@ export default function WeatherImpact() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              <TableRow>
-                <TableCell>
-                  <div className="flex items-center">
-                    <CloudRain className="h-4 w-4 mr-2 text-blue-500" />
-                    <span>Rain forecast (next 3 days)</span>
-                  </div>
-                </TableCell>
-                <TableCell>Umbrellas, Raincoats, Waterproof Boots</TableCell>
-                <TableCell>
-                  <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300">
-                    +120% Demand
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  Increase stock levels by 100%, feature prominently in store
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>
-                  <div className="flex items-center">
-                    <CloudSun className="h-4 w-4 mr-2 text-yellow-500" />
-                    <span>Heat wave (temperature > 30°C)</span>
-                  </div>
-                </TableCell>
-                <TableCell>Fans, Air Conditioners, Cold Beverages</TableCell>
-                <TableCell>
-                  <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300">
-                    +85% Demand
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  Double stock levels, create promotional bundles
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>
-                  <div className="flex items-center">
-                    <Snowflake className="h-4 w-4 mr-2 text-blue-300" />
-                    <span>Snow forecast</span>
-                  </div>
-                </TableCell>
-                <TableCell>Snow Shovels, Winter Boots, De-icer</TableCell>
-                <TableCell>
-                  <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300">
-                    +150% Demand
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  Triple stock levels, expedite delivery from warehouse
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>
-                  <div className="flex items-center">
-                    <CloudLightning className="h-4 w-4 mr-2 text-purple-500" />
-                    <span>Severe storm warning</span>
-                  </div>
-                </TableCell>
-                <TableCell>Flashlights, Batteries, Emergency Kits</TableCell>
-                <TableCell>
-                  <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300">
-                    +95% Demand
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  Create emergency displays, ensure adequate stock
-                </TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell>
-                  <div className="flex items-center">
-                    <CloudSun className="h-4 w-4 mr-2 text-yellow-500" />
-                    <span>Extended sunny period</span>
-                  </div>
-                </TableCell>
-                <TableCell>Winter Apparel, Heaters, Hot Beverages</TableCell>
-                <TableCell>
-                  <Badge className="bg-rose-100 text-rose-800 border-rose-300">
-                    -50% Demand
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  Reduce stock, offer promotions to clear inventory
-                </TableCell>
-              </TableRow>
+              {[
+                {
+                  icon: CloudRain,
+                  iconColor: "text-blue-500",
+                  condition: "Rain forecast (next 3 days)",
+                  products: "Umbrellas, Raincoats, Waterproof Boots",
+                  impact: "+120% Demand",
+                  action: "Increase stock levels by 100%, feature prominently in store"
+                },
+                {
+                  icon: CloudSun,
+                  iconColor: "text-yellow-500",
+                  condition: "Heat wave (temperature &gt; 30°C)",
+                  products: "Fans, Air Conditioners, Cold Beverages",
+                  impact: "+85% Demand",
+                  action: "Double stock levels, create promotional bundles"
+                },
+                {
+                  icon: Snowflake,
+                  iconColor: "text-blue-300",
+                  condition: "Snow forecast",
+                  products: "Snow Shovels, Winter Boots, De-icer",
+                  impact: "+150% Demand",
+                  action: "Triple stock levels, expedite delivery from warehouse"
+                },
+                {
+                  icon: CloudLightning,
+                  iconColor: "text-purple-500",
+                  condition: "Severe storm warning",
+                  products: "Flashlights, Batteries, Emergency Kits",
+                  impact: "+95% Demand",
+                  action: "Create emergency displays, ensure adequate stock"
+                },
+                {
+                  icon: CloudSun,
+                  iconColor: "text-yellow-500",
+                  condition: "Extended sunny period",
+                  products: "Winter Apparel, Heaters, Hot Beverages",
+                  impact: "-50% Demand",
+                  action: "Reduce stock, offer promotions to clear inventory"
+                }
+              ].map((item, index) => (
+                <TableRow key={index}>
+                  <TableCell>
+                    <div className="flex items-center">
+                      <item.icon className={`h-4 w-4 mr-2 ${item.iconColor}`} />
+                      <span>{item.condition}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>{item.products}</TableCell>
+                  <TableCell>
+                    <Badge 
+                      className={`${
+                        item.impact.startsWith("+") 
+                          ? "bg-emerald-100 text-emerald-800 border-emerald-300" 
+                          : "bg-rose-100 text-rose-800 border-rose-300"
+                      }`}
+                    >
+                      {item.impact} Demand
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{item.action}</TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </CardContent>
