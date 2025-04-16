@@ -95,6 +95,10 @@ export default function DemandForecasting() {
 
   const selectedProductDetails = products.find(p => p.id === selectedProduct);
 
+  // Check if there are any forecasts with weather and social factors
+  const hasWeatherFactors = forecastData.some(d => d.factors && d.factors.weather !== undefined);
+  const hasSocialFactors = forecastData.some(d => d.factors && d.factors.social !== undefined);
+
   return (
     <div className="container p-6">
       <h1 className="text-3xl font-bold mb-6">Demand Forecasting</h1>
@@ -286,7 +290,7 @@ export default function DemandForecasting() {
               <h3 className="font-medium mb-1">External Factors</h3>
               <p className="text-sm text-muted-foreground">
                 Weather conditions and social media sentiment are expected to have 
-                {forecastChartData.some(d => d.factors.weather || d.factors.social)
+                {(hasWeatherFactors || hasSocialFactors)
                   ? " a noticeable impact on upcoming demand. Monitor these factors closely."
                   : " minimal impact on upcoming demand based on current forecasts."}
               </p>
