@@ -1,11 +1,9 @@
-
 import { useDashboardSummary, useAlerts, useWeatherData } from "@/hooks/useInventoryData";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { AlertsList } from "@/components/dashboard/AlertsList";
 import { WeatherForecast } from "@/components/dashboard/WeatherForecast";
 import { LineChart } from "@/components/charts/LineChart";
 import { BarChart } from "@/components/charts/BarChart";
-import { Alert } from "@/lib/mock-data";
 import { Boxes, AlertTriangle, TrendingUp, DollarSign, ShoppingCart, Clock } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -121,7 +119,7 @@ export default function Dashboard() {
         />
         <StatCard 
           title="Pending Orders" 
-          value={summaryData?.pendingOrders || 0} 
+          value={summaryData?.alertsCount || 0} 
           icon={<ShoppingCart className="text-secondary" />}
           description="Awaiting fulfillment"
           colorScheme="primary"
@@ -156,7 +154,6 @@ export default function Dashboard() {
         <AlertsList 
           alerts={alerts} 
           onMarkAsRead={handleMarkAsRead}
-          isLoading={isMarkingRead}
           className="inventory-card"
         />
       </div>

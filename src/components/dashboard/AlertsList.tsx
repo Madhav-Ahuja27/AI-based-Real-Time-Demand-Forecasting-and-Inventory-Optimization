@@ -9,9 +9,23 @@ interface AlertsListProps {
   alerts: Alert[];
   onMarkAsRead?: (alertId: string) => void;
   className?: string;
+  isLoading?: boolean; // Add isLoading prop to the interface
 }
 
-export function AlertsList({ alerts, onMarkAsRead, className }: AlertsListProps) {
+export function AlertsList({ alerts, onMarkAsRead, className, isLoading = false }: AlertsListProps) {
+  if (isLoading) {
+    return (
+      <Card className={className}>
+        <CardHeader>
+          <CardTitle className="text-lg">Alerts & Notifications</CardTitle>
+        </CardHeader>
+        <CardContent className="text-center py-8 text-muted-foreground">
+          Loading alerts...
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (!alerts.length) {
     return (
       <Card className={className}>
