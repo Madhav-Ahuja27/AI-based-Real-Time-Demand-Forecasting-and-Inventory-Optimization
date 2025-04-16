@@ -13,7 +13,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 210 100% 50%; /* Updated to a blue for primary actions */
     --primary-foreground: 210 40% 98%;
 
     --secondary: 210 40% 96.1%;
@@ -22,7 +22,7 @@
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 210 40% 96.1%;
+    --accent: 215 100% 66%; /* Accent blue for highlights */
     --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
@@ -31,24 +31,33 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
+    
+    /* Success and warning for inventory states */
+    --success: 142 70% 45%;
+    --success-foreground: 0 0% 98%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 98%;
+    
+    /* Weather indicators */
+    --weather-sunny: 48 100% 50%;
+    --weather-rainy: 200 100% 65%;
+    --weather-cloudy: 220 15% 80%;
+
+    /* Sentiment indicators */
+    --sentiment-positive: 160 84% 39%;
+    --sentiment-neutral: 220 15% 60%;
+    --sentiment-negative: 0 84% 60%;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
+    --sidebar-background: 215 30% 20%; /* Dark blue sidebar */
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 210 100% 55%;
     --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 215 20% 30%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 215 25% 25%;
+    --sidebar-ring: 210 100% 60%;
   }
 
   .dark {
