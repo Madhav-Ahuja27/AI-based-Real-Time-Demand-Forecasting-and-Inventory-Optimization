@@ -20,61 +20,68 @@ export default {
     },
     extend: {
       colors: {
-        // Enhanced color palette with more vibrant and modern colors
+        // Professional inventory management color palette
         primary: {
-          DEFAULT: '#4A6CF7', // Vibrant blue
+          DEFAULT: '#0284c7', // Strong blue
           foreground: '#FFFFFF',
-          light: '#7B9CFF',
-          dark: '#3A5AD6'
+          light: '#38bdf8',
+          dark: '#0369a1'
         },
         secondary: {
-          DEFAULT: '#6B48FF', // Rich purple
+          DEFAULT: '#6366f1', // Rich indigo
           foreground: '#FFFFFF',
-          light: '#9370FF',
-          dark: '#5A39D6'
+          light: '#818cf8',
+          dark: '#4f46e5'
         },
         accent: {
-          DEFAULT: '#22D3EE', // Bright cyan
+          DEFAULT: '#22d3ee', // Bright teal
           foreground: '#FFFFFF',
-          light: '#67E8F9',
-          dark: '#0891B2'
-        },
-        background: {
-          DEFAULT: '#F5F7FA', // Soft gray background
-          dark: '#1A202C'
-        },
-        foreground: {
-          DEFAULT: '#2D3748', // Deep gray text
-          light: '#4A5568'
-        },
-        muted: {
-          DEFAULT: '#E2E8F0', // Soft gray for muted elements
-          foreground: '#718096'
+          light: '#67e8f9',
+          dark: '#0891b2'
         },
         success: {
-          DEFAULT: '#48BB78', // Green for positive actions
-          foreground: '#FFFFFF'
+          DEFAULT: '#10b981', // Rich green
+          foreground: '#FFFFFF',
+          light: '#34d399',
+          dark: '#059669'
         },
         warning: {
-          DEFAULT: '#ED8936', // Orange for warnings
-          foreground: '#FFFFFF'
+          DEFAULT: '#f59e0b', // Amber
+          foreground: '#FFFFFF',
+          light: '#fbbf24',
+          dark: '#d97706'
+        },
+        background: {
+          DEFAULT: '#f1f5f9', // Cool gray background
+          dark: '#0f172a'
+        },
+        foreground: {
+          DEFAULT: '#1e293b', // Deep gray text
+          light: '#475569'
+        },
+        muted: {
+          DEFAULT: '#e2e8f0', // Soft gray for muted elements
+          foreground: '#64748b'
         },
         destructive: {
-          DEFAULT: '#F56565', // Soft red for destructive actions
+          DEFAULT: '#ef4444', // Soft red for destructive actions
           foreground: '#FFFFFF'
         },
-        border: '#E2E8F0'
+        border: '#cbd5e1'
       },
       borderRadius: {
-        lg: '0.75rem', // Slightly more rounded corners
-        md: 'calc(0.75rem - 2px)',
-        sm: 'calc(0.75rem - 4px)'
+        lg: 'var(--radius)',
+        md: 'calc(var(--radius) - 2px)',
+        sm: 'calc(var(--radius) - 4px)'
       },
       boxShadow: {
         // Enhanced shadow for depth
         DEFAULT: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
         md: '0 6px 12px -2px rgba(0, 0, 0, 0.1), 0 3px 6px -3px rgba(0, 0, 0, 0.05)',
         lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
+      },
+      scale: {
+        '102': '1.02',
       },
       keyframes: {
         // Enhanced animations
@@ -90,7 +97,11 @@ export default {
           "0%": { opacity: "0", transform: "translateY(10px)" },
           "100%": { opacity: "1", transform: "translateY(0)" }
         },
-        "subtle-bounce": {
+        "pulse-light": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.7" }
+        },
+        "inventory-alert": {
           "0%, 100%": { transform: "scale(1)" },
           "50%": { transform: "scale(1.05)" }
         }
@@ -99,10 +110,10 @@ export default {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.3s ease-out",
-        "subtle-bounce": "subtle-bounce 0.5s ease-in-out"
+        "pulse-light": "pulse-light 2s ease-in-out infinite",
+        "inventory-alert": "inventory-alert 2s ease-in-out infinite"
       }
     }
   },
   plugins: [require("tailwindcss-animate")],
 } satisfies Config;
-

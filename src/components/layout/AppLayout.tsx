@@ -2,7 +2,20 @@
 import React from "react";
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarTrigger, SidebarFooter } from "@/components/ui/sidebar";
 import { Outlet } from "react-router-dom";
-import { BarChart3, CloudSun, LineChart, Package, PieChart, RefreshCw, LayoutDashboard, FileBarChart, MessageCircle } from "lucide-react";
+import { 
+  Package, 
+  Boxes, 
+  LineChart, 
+  TrendingUp, 
+  AlertTriangle, 
+  Truck, 
+  Users, 
+  FileBarChart, 
+  Settings, 
+  CloudSun, 
+  MessageCircle,
+  LayoutDashboard
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
@@ -14,8 +27,8 @@ export function AppLayout() {
         <Sidebar>
           <SidebarHeader className="flex h-14 items-center border-b border-sidebar-border px-4">
             <Link to="/" className="flex items-center gap-2">
-              <Package className="h-6 w-6 text-sidebar-primary" />
-              <span className="font-semibold text-sidebar-foreground">StockSavvy</span>
+              <Package className="h-6 w-6 text-primary" />
+              <span className="font-semibold text-sidebar-foreground">InventoryPro</span>
             </Link>
           </SidebarHeader>
           <SidebarContent>
@@ -33,6 +46,14 @@ export function AppLayout() {
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
+                      <Link to="/inventory-monitoring">
+                        <Boxes className="h-4 w-4" />
+                        <span>Inventory</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
                       <Link to="/demand-forecasting">
                         <LineChart className="h-4 w-4" />
                         <span>Demand Forecasting</span>
@@ -41,20 +62,20 @@ export function AppLayout() {
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
-                      <Link to="/inventory-monitoring">
-                        <BarChart3 className="h-4 w-4" />
-                        <span>Inventory Monitoring</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
                       <Link to="/reordering-system">
-                        <RefreshCw className="h-4 w-4" />
-                        <span>Smart Reordering</span>
+                        <TrendingUp className="h-4 w-4" />
+                        <span>Reordering</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+            
+            <SidebarGroup>
+              <SidebarGroupLabel>Advanced</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
                       <Link to="/weather-impact">
@@ -67,7 +88,7 @@ export function AppLayout() {
                     <SidebarMenuButton asChild>
                       <Link to="/sentiment-tracking">
                         <MessageCircle className="h-4 w-4" />
-                        <span>Social Sentiment</span>
+                        <span>Market Sentiment</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -75,7 +96,7 @@ export function AppLayout() {
                     <SidebarMenuButton asChild>
                       <Link to="/reports">
                         <FileBarChart className="h-4 w-4" />
-                        <span>Reports & Insights</span>
+                        <span>Reports & Analytics</span>
                       </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -86,7 +107,7 @@ export function AppLayout() {
           <SidebarFooter className="flex items-center justify-between border-t border-sidebar-border p-4">
             <ThemeToggle />
             <Button variant="outline" size="icon">
-              <Package className="h-4 w-4" />
+              <Settings className="h-4 w-4" />
               <span className="sr-only">Settings</span>
             </Button>
           </SidebarFooter>
@@ -95,8 +116,8 @@ export function AppLayout() {
           <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6">
             <SidebarTrigger />
             <div className="ml-auto flex items-center gap-2">
-              <Button variant="outline" size="sm">Help</Button>
-              <Button size="sm">User</Button>
+              <Button variant="outline" size="sm">Support</Button>
+              <Button size="sm">Admin</Button>
             </div>
           </header>
           <main className="flex-1 overflow-auto">
