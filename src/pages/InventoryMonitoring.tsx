@@ -1,7 +1,6 @@
-
-import { useEffect, useState } from "react";
-import { fetchProducts, fetchLocations, fetchAlerts } from "@/lib/mock-api";
-import { Product, Location, Alert } from "@/lib/mock-data";
+import { useState } from "react";
+import { useProducts, useLocations, useAlerts } from "@/hooks/useInventoryData";
+import { Product, Location } from "@/lib/mock-data";
 import { ProductTable } from "@/components/inventory/ProductTable";
 import { AlertsList } from "@/components/dashboard/AlertsList";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,46 +9,28 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Search } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function InventoryMonitoring() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [alerts, setAlerts] = useState<Alert[]>([]);
+  const { data: products = [], isLoading: isProductsLoading } = useProducts();
+  const { data: locations = [], isLoading: isLocationsLoading } = useLocations();
+  const { data: alerts = [], isLoading: isAlertsLoading } = useAlerts();
   const [selectedLocation, setSelectedLocation] = useState<string>("all");
-  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setIsLoading(true);
-        const [productsData, locationsData, alertsData] = await Promise.all([
-          fetchProducts(),
-          fetchLocations(),
-          fetchAlerts()
-        ]);
-        
-        setProducts(productsData);
-        setLocations(locationsData);
-        setAlerts(alertsData);
-      } catch (error) {
-        console.error("Error loading inventory data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    loadData();
-  }, []);
+  const filteredProducts = products
+    .filter(product => selectedLocation === "all" || product.locationId === selectedLocation)
+    .filter(product => 
+      searchQuery === "" || 
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.sku.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
-  // Filter products by selected location
-  const filteredProducts = selectedLocation === "all" 
-    ? products 
-    : products.filter(product => product.locationId === selectedLocation);
-
-  // Get counts for different stock statuses
   const lowStockCount = filteredProducts.filter(p => p.stockLevel <= p.reorderPoint).length;
   const optimalStockCount = filteredProducts.filter(p => p.stockLevel > p.reorderPoint && p.stockLevel <= p.maxStockLevel).length;
   const overstockCount = filteredProducts.filter(p => p.stockLevel > p.maxStockLevel).length;
+
+  const isLoading = isProductsLoading || isLocationsLoading || isAlertsLoading;
 
   return (
     <div className="container p-6">
@@ -123,22 +104,35 @@ export default function InventoryMonitoring() {
               <CardDescription>View and filter your current inventory</CardDescription>
             </div>
             
-            <Select 
-              value={selectedLocation} 
-              onValueChange={setSelectedLocation}
-            >
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Select location" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Locations</SelectItem>
-                {locations.map(location => (
-                  <SelectItem key={location.id} value={location.id}>
-                    {location.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex gap-2 flex-col sm:flex-row w-full md:w-auto">
+              <div className="relative w-full sm:w-[200px]">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search products..."
+                  className="pl-8"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              
+              <Select 
+                value={selectedLocation} 
+                onValueChange={setSelectedLocation}
+              >
+                <SelectTrigger className="w-full sm:w-[200px]">
+                  <SelectValue placeholder="Select location" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Locations</SelectItem>
+                  {locations.map(location => (
+                    <SelectItem key={location.id} value={location.id}>
+                      {location.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -169,16 +163,6 @@ export default function InventoryMonitoring() {
               
               <TabsContent value="all">
                 <div className="rounded-md border overflow-hidden">
-                  <div className="p-4 bg-muted/50">
-                    <div className="relative w-full max-w-sm">
-                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        type="search"
-                        placeholder="Search items..."
-                        className="w-full pl-8"
-                      />
-                    </div>
-                  </div>
                   <div className="p-4">
                     {filteredProducts.slice(0, 5).map(product => (
                       <div key={product.id} className="flex items-center justify-between py-2 border-b last:border-0">
@@ -193,7 +177,9 @@ export default function InventoryMonitoring() {
                               Min: {product.minStockLevel} | Max: {product.maxStockLevel}
                             </p>
                           </div>
-                          <Button variant="outline" size="sm">View</Button>
+                          <Link to={`/product/${product.id}`}>
+                            <Button variant="outline" size="sm">View</Button>
+                          </Link>
                         </div>
                       </div>
                     ))}
@@ -201,7 +187,6 @@ export default function InventoryMonitoring() {
                 </div>
               </TabsContent>
               
-              {/* Similar content for other tabs */}
               <TabsContent value="low">
                 <div className="space-y-2">
                   {filteredProducts
@@ -220,7 +205,63 @@ export default function InventoryMonitoring() {
                               Reorder at: {product.reorderPoint}
                             </p>
                           </div>
-                          <Button variant="outline" size="sm">Order</Button>
+                          <Link to="/reordering-system">
+                            <Button variant="outline" size="sm">Order</Button>
+                          </Link>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="optimal">
+                <div className="space-y-2">
+                  {filteredProducts
+                    .filter(p => p.stockLevel > p.reorderPoint && p.stockLevel <= p.maxStockLevel)
+                    .slice(0, 5)
+                    .map(product => (
+                      <div key={product.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                        <div>
+                          <p className="font-medium">{product.name}</p>
+                          <p className="text-xs text-muted-foreground">SKU: {product.sku}</p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <p className="font-medium text-emerald-500">{product.stockLevel} units</p>
+                            <p className="text-xs text-muted-foreground">
+                              Optimal: {product.reorderPoint}-{product.maxStockLevel}
+                            </p>
+                          </div>
+                          <Link to={`/product/${product.id}`}>
+                            <Button variant="outline" size="sm">View</Button>
+                          </Link>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="overstock">
+                <div className="space-y-2">
+                  {filteredProducts
+                    .filter(p => p.stockLevel > p.maxStockLevel)
+                    .slice(0, 5)
+                    .map(product => (
+                      <div key={product.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                        <div>
+                          <p className="font-medium">{product.name}</p>
+                          <p className="text-xs text-muted-foreground">SKU: {product.sku}</p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <p className="font-medium text-blue-500">{product.stockLevel} units</p>
+                            <p className="text-xs text-muted-foreground">
+                              Max: {product.maxStockLevel}
+                            </p>
+                          </div>
+                          <Link to={`/product/${product.id}`}>
+                            <Button variant="outline" size="sm">View</Button>
+                          </Link>
                         </div>
                       </div>
                     ))}

@@ -1,67 +1,28 @@
 
-import { useEffect, useState } from "react";
-import { fetchProducts, fetchProductForecast, fetchSalesHistory } from "@/lib/mock-api";
+import { useState } from "react";
+import { useProducts, useProductSalesHistory, useProductForecast } from "@/hooks/useInventoryData";
 import { LineChart } from "@/components/charts/LineChart";
-import { Product, Forecast, SalesData } from "@/lib/mock-data";
+import { Product } from "@/lib/mock-data";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { format, parseISO, subDays } from "date-fns";
+import { Link } from "react-router-dom";
 
 export default function DemandForecasting() {
-  const [products, setProducts] = useState<Product[]>([]);
+  const { data: products = [], isLoading: isProductsLoading } = useProducts();
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
-  const [salesData, setSalesData] = useState<SalesData[]>([]);
-  const [forecastData, setForecastData] = useState<Forecast[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<"30" | "60" | "90">("30");
+  
+  const { data: salesData = [], isLoading: isSalesLoading } = useProductSalesHistory(
+    selectedProduct, 
+    parseInt(timeRange)
+  );
+  const { data: forecastData = [], isLoading: isForecastLoading } = useProductForecast(selectedProduct);
 
-  useEffect(() => {
-    const loadInitialData = async () => {
-      try {
-        const productsData = await fetchProducts();
-        setProducts(productsData);
-        
-        if (productsData.length > 0) {
-          setSelectedProduct(productsData[0].id);
-        }
-      } catch (error) {
-        console.error("Error loading products:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    loadInitialData();
-  }, []);
-
-  useEffect(() => {
-    if (selectedProduct) {
-      const loadProductData = async () => {
-        setIsLoading(true);
-        try {
-          const [productSalesData, productForecastData] = await Promise.all([
-            fetchSalesHistory(parseInt(timeRange)),
-            fetchProductForecast(selectedProduct)
-          ]);
-          
-          // Filter sales data for selected product
-          const filteredSalesData = productSalesData.filter(
-            (sale) => sale.productId === selectedProduct
-          );
-          
-          setSalesData(filteredSalesData);
-          setForecastData(productForecastData);
-        } catch (error) {
-          console.error("Error loading product data:", error);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      
-      loadProductData();
-    }
-  }, [selectedProduct, timeRange]);
+  // Select first product by default when products load
+  if (!selectedProduct && products.length > 0 && !isProductsLoading) {
+    setSelectedProduct(products[0].id);
+  }
 
   // Prepare data for the charts
   const salesChartData = salesData.map((sale) => ({
@@ -98,6 +59,8 @@ export default function DemandForecasting() {
   // Check if there are any forecasts with weather and social factors
   const hasWeatherFactors = forecastData.some(d => d.factors && d.factors.weather !== undefined);
   const hasSocialFactors = forecastData.some(d => d.factors && d.factors.social !== undefined);
+
+  const isLoading = isProductsLoading || isSalesLoading || isForecastLoading;
 
   return (
     <div className="container p-6">
@@ -262,6 +225,9 @@ export default function DemandForecasting() {
       <Card>
         <CardHeader>
           <CardTitle>AI-Powered Insights</CardTitle>
+          <CardDescription>
+            Machine learning powered analysis of your forecast data
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -295,6 +261,14 @@ export default function DemandForecasting() {
                   : " minimal impact on upcoming demand based on current forecasts."}
               </p>
             </div>
+          </div>
+          
+          <div className="mt-6 flex justify-end">
+            <Link to="/reordering-system">
+              <button className="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded">
+                Plan Reorder Based on Forecast
+              </button>
+            </Link>
           </div>
         </CardContent>
       </Card>

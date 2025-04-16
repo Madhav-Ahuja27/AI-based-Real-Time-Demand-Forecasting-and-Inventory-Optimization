@@ -1,51 +1,47 @@
 
-import { useEffect, useState } from "react";
-import { fetchDashboardSummary, fetchAlerts, fetchWeatherData, markAlertAsRead } from "@/lib/mock-api";
+import { useDashboardSummary, useAlerts, useWeatherData } from "@/hooks/useInventoryData";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { AlertsList } from "@/components/dashboard/AlertsList";
 import { WeatherForecast } from "@/components/dashboard/WeatherForecast";
 import { LineChart } from "@/components/charts/LineChart";
 import { BarChart } from "@/components/charts/BarChart";
-import { Alert, WeatherData } from "@/lib/mock-data";
+import { Alert } from "@/lib/mock-data";
 import { Boxes, AlertTriangle, TrendingUp, DollarSign, ShoppingCart, Clock } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { markAlertAsRead } from "@/lib/mock-api";
+import { useState } from "react";
+import { toast } from "@/hooks/use-toast";
 
 export default function Dashboard() {
-  const [summaryData, setSummaryData] = useState<any | null>(null);
-  const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [weatherData, setWeatherData] = useState<WeatherData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: summaryData, isLoading: isSummaryLoading } = useDashboardSummary();
+  const { data: alertsData, isLoading: isAlertsLoading, refetch: refetchAlerts } = useAlerts();
+  const { data: weatherData, isLoading: isWeatherLoading } = useWeatherData();
+  const [isMarkingRead, setIsMarkingRead] = useState(false);
 
-  useEffect(() => {
-    const loadDashboardData = async () => {
-      try {
-        setIsLoading(true);
-        
-        // Load data in parallel
-        const [summary, alertsData, weatherForecast] = await Promise.all([
-          fetchDashboardSummary(),
-          fetchAlerts(),
-          fetchWeatherData()
-        ]);
-        
-        setSummaryData(summary);
-        setAlerts(alertsData.filter(alert => !alert.read).slice(0, 5));
-        setWeatherData(weatherForecast);
-      } catch (error) {
-        console.error("Error loading dashboard data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    loadDashboardData();
-  }, []);
+  // Filter out read alerts
+  const alerts = alertsData?.filter(alert => !alert.read).slice(0, 5) || [];
 
   const handleMarkAsRead = async (alertId: string) => {
-    await markAlertAsRead(alertId);
-    setAlerts(alerts.filter(alert => alert.id !== alertId));
+    try {
+      setIsMarkingRead(true);
+      await markAlertAsRead(alertId);
+      await refetchAlerts();
+      toast({
+        title: "Success",
+        description: "Alert marked as read",
+      });
+    } catch (error) {
+      console.error("Error marking alert as read:", error);
+      toast({
+        title: "Error",
+        description: "Failed to mark alert as read",
+        variant: "destructive",
+      });
+    } finally {
+      setIsMarkingRead(false);
+    }
   };
 
   // Create sample inventory KPIs
@@ -69,6 +65,8 @@ export default function Dashboard() {
     name: product.name,
     sales: product.sales
   })) || [];
+
+  const isLoading = isSummaryLoading || isAlertsLoading || isWeatherLoading;
 
   if (isLoading) {
     return (
@@ -126,7 +124,7 @@ export default function Dashboard() {
           value={summaryData?.pendingOrders || 0} 
           icon={<ShoppingCart className="text-secondary" />}
           description="Awaiting fulfillment"
-          colorScheme="secondary"
+          colorScheme="primary"
           className="inventory-card"
         />
       </div>
@@ -158,6 +156,7 @@ export default function Dashboard() {
         <AlertsList 
           alerts={alerts} 
           onMarkAsRead={handleMarkAsRead}
+          isLoading={isMarkingRead}
           className="inventory-card"
         />
       </div>
@@ -194,7 +193,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <WeatherForecast 
-              weatherData={weatherData} 
+              weatherData={weatherData || []} 
               className="border-none p-0"
             />
             <div className="mt-4 pt-4 border-t">
