@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { WeatherData } from "@/lib/mock-data";
 import { toast } from "sonner";

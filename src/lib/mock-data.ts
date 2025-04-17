@@ -1,3 +1,4 @@
+
 import { subDays, format, addDays } from "date-fns";
 
 // Types
@@ -44,6 +45,8 @@ export interface WeatherData {
   condition: 'sunny' | 'cloudy' | 'rainy' | 'stormy' | 'snowy';
   temperature: number;
   precipitation: number;
+  humidity: number; // Added this property
+  windSpeed: number;  // Added this property
   impact: number; // impact score on sales -1 to 1
 }
 
