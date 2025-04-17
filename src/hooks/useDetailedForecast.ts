@@ -27,7 +27,10 @@ export function useDetailedForecast({ rawData, selectedProduct }: UseDetailedFor
   }, [rawData]);
 
   const filteredData = useMemo(() => {
-    if (!selectedProduct) return parsedData;
+    // If selected product is null, undefined, empty string, or "all_products", return all data
+    if (!selectedProduct || selectedProduct === "all_products") {
+      return parsedData;
+    }
     return parsedData.filter(item => item.productName === selectedProduct);
   }, [parsedData, selectedProduct]);
 

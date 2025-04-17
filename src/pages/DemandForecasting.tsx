@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useProducts, useProductSalesHistory, useProductForecast } from "@/hooks/useInventoryData";
 import { LineChart } from "@/components/charts/LineChart";
@@ -407,7 +408,7 @@ export default function DemandForecasting() {
                       <SelectValue placeholder="Select a product" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Products</SelectItem>
+                      <SelectItem value="all_products">All Products</SelectItem>
                       {uniqueProducts.map((product) => (
                         <SelectItem key={product} value={product}>
                           {product}
