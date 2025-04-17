@@ -1,3 +1,4 @@
+
 import { useMemo, useState } from "react";
 import { format, parseISO, differenceInDays } from "date-fns";
 import {
@@ -29,16 +30,32 @@ export function DetailedForecastChart({ data, className }: DetailedForecastChart
 
   const xAxisTickFormatter = (dateStr: string) => {
     const date = parseISO(dateStr);
-    if (sortedData.length > 1) {
+    
+    // If there are only a few data points, show all dates
+    if (sortedData.length <= 7) {
+      return format(date, "MMM d");
+    }
+    
+    // For larger datasets, be more selective
+    if (sortedData.length > 0) {
       const firstDate = parseISO(sortedData[0].date);
-      const daysDifference = differenceInDays(date, firstDate);
+      const lastDate = parseISO(sortedData[sortedData.length - 1].date);
+      const totalDays = differenceInDays(lastDate, firstDate);
       
-      if (daysDifference === 0 || 
-          daysDifference === sortedData.length - 1 || 
-          daysDifference % Math.max(1, Math.floor(sortedData.length / 5)) === 0) {
+      // Always show first and last dates
+      if (dateStr === sortedData[0].date || dateStr === sortedData[sortedData.length - 1].date) {
+        return format(date, "MMM d");
+      }
+      
+      // Show dates at regular intervals based on total date range
+      const daysDifference = differenceInDays(date, firstDate);
+      const interval = Math.max(1, Math.floor(totalDays / 4)); // Show ~5 ticks
+      
+      if (daysDifference % interval === 0) {
         return format(date, "MMM d");
       }
     }
+    
     return '';
   };
 

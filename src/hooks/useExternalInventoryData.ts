@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export interface ExternalInventoryItem {
@@ -5,6 +6,12 @@ export interface ExternalInventoryItem {
   Current_Stock: number;
   Recommended_Order: number;
   Status: string;
+  // New fields from the updated API
+  Audience_Fit?: string | null;
+  Confidence?: string | null;
+  Market_Sentiment?: string | null;
+  Prediction?: string | null;
+  // Optional fields maintained for backward compatibility
   SKU?: string;
   Category?: string;
   Price?: number;
@@ -24,183 +31,83 @@ interface ExternalInventoryResponse {
 const mockInventoryData: ExternalInventoryItem[] = [
   {
     Id: "1",
-    Product: "Apple MacBook Pro M3 Pro (14-inch, 18GB RAM, 512GB SSD)",
-    Current_Stock: 12,
-    Recommended_Order: 8,
+    Product: "Blue Star 1.5 Ton 5 Star Split AC",
+    Current_Stock: 5,
+    Recommended_Order: 18,
     Status: "In Stock",
-    SKU: "APP-MBP-M3P-512",
-    Category: "Laptops",
-    Price: 1999.99,
-    Supplier: "Apple Inc.",
+    Audience_Fit: "Medium",
+    Confidence: "Medium",
+    Market_Sentiment: "Mixed",
+    Prediction: "May succeed",
+    SKU: "BLUESTAR-AC-15T",
+    Category: "Air Conditioners",
+    Price: 42999.99,
+    Supplier: "Blue Star Ltd",
     Location: "Delhi"
   },
   {
     Id: "2",
-    Product: "Samsung Galaxy S24 Ultra (12GB RAM, 512GB)",
-    Current_Stock: 6,
-    Recommended_Order: 10,
-    Status: "Low Stock",
-    SKU: "SAM-GS24U-12-512",
-    Category: "Smartphones",
-    Price: 1299.99,
-    Supplier: "Samsung Electronics",
-    Location: "Chandigarh"
+    Product: "Haier 1.5 Ton 4 Star Smart Split AC",
+    Current_Stock: 18,
+    Recommended_Order: 0,
+    Status: "In Stock",
+    Audience_Fit: "High",
+    Confidence: "High",
+    Market_Sentiment: "Positive",
+    Prediction: "Will succeed",
+    SKU: "HAIER-AC-15T-4S",
+    Category: "Air Conditioners",
+    Price: 38999.99,
+    Supplier: "Haier Electronics",
+    Location: "Mumbai"
   },
   {
     Id: "3",
-    Product: "Sony WH-1000XM5 Wireless Noise Cancelling Headphones",
+    Product: "HP 15, 12th Gen Intel Core i5 Laptop",
     Current_Stock: 0,
-    Recommended_Order: 15,
+    Recommended_Order: 25,
     Status: "Out of Stock",
-    SKU: "SNY-WH1000-05",
-    Category: "Audio",
-    Price: 349.99,
-    Supplier: "Sony Corporation",
-    Location: "Ludhiana"
+    Audience_Fit: "High",
+    Confidence: "High",
+    Market_Sentiment: "Positive",
+    Prediction: "Will succeed",
+    SKU: "HP-I5-12GEN",
+    Category: "Laptops",
+    Price: 65999.99,
+    Supplier: "HP Inc.",
+    Location: "Bangalore"
   },
   {
     Id: "4",
-    Product: "ASUS ROG Strix G16 (2024) Gaming Laptop, Intel i9-14900H, RTX 4070",
-    Current_Stock: 8,
-    Recommended_Order: 5,
-    Status: "In Stock",
-    SKU: "ASUS-ROG-G16-4070",
-    Category: "Gaming Laptops",
-    Price: 1799.99,
-    Supplier: "Asus Inc.",
-    Location: "Jalandhar"
+    Product: "Voltas 1.5 ton 3 Star Inverter Split AC",
+    Current_Stock: 0,
+    Recommended_Order: 20,
+    Status: "Out of Stock",
+    Audience_Fit: "High",
+    Confidence: "High",
+    Market_Sentiment: "Positive",
+    Prediction: "Will succeed",
+    SKU: "VOLTAS-AC-15T-3S",
+    Category: "Air Conditioners",
+    Price: 35999.99,
+    Supplier: "Voltas Ltd",
+    Location: "Chennai"
   },
   {
     Id: "5",
-    Product: "Apple iPad Pro 12.9-inch (M2, Wi-Fi, 512GB)",
-    Current_Stock: 4,
-    Recommended_Order: 8,
-    Status: "Low Stock",
-    SKU: "APP-IPP-M2-512",
-    Category: "Tablets",
-    Price: 1399.99,
-    Supplier: "Apple Inc.",
-    Location: "Delhi"
-  },
-  {
-    Id: "6",
-    Product: "Bose QuietComfort Ultra Headphones",
+    Product: "HP 15, AMD Ryzen 5 7520U Laptop",
     Current_Stock: 10,
-    Recommended_Order: 6,
-    Status: "In Stock",
-    SKU: "BOSE-QCU-BLK",
-    Category: "Audio",
-    Price: 429.99,
-    Supplier: "Bose Corporation",
-    Location: "Chandigarh"
-  },
-  {
-    Id: "7",
-    Product: "Sony Bravia XR A80L 65-inch OLED 4K TV",
-    Current_Stock: 3,
     Recommended_Order: 5,
-    Status: "Low Stock",
-    SKU: "SNY-BRAVIA-A80L-65",
-    Category: "TVs",
-    Price: 2499.99,
-    Supplier: "Sony Corporation",
-    Location: "Delhi"
-  },
-  {
-    Id: "8",
-    Product: "Dyson V15 Detect Absolute Cordless Vacuum",
-    Current_Stock: 0,
-    Recommended_Order: 8,
-    Status: "Out of Stock",
-    SKU: "DYS-V15-DETECT",
-    Category: "Home Appliances",
-    Price: 749.99,
-    Supplier: "Dyson Ltd",
-    Location: "Ludhiana"
-  },
-  {
-    Id: "9",
-    Product: "NVIDIA GeForce RTX 4090 24GB GDDR6X Graphics Card",
-    Current_Stock: 2,
-    Recommended_Order: 5,
-    Status: "Low Stock",
-    SKU: "NV-RTX4090-24G",
-    Category: "Computer Components",
-    Price: 1599.99,
-    Supplier: "NVIDIA Corporation",
-    Location: "Chandigarh"
-  },
-  {
-    Id: "10",
-    Product: "Amazon Echo Show 10 (3rd Gen)",
-    Current_Stock: 15,
-    Recommended_Order: 10,
     Status: "In Stock",
-    SKU: "AMZN-ECHO10-BLK",
-    Category: "Smart Home",
-    Price: 249.99,
-    Supplier: "Amazon.com, Inc.",
-    Location: "Jalandhar"
-  },
-  {
-    Id: "11",
-    Product: "Canon EOS R5 Full-Frame Mirrorless Camera",
-    Current_Stock: 5,
-    Recommended_Order: 3,
-    Status: "In Stock",
-    SKU: "CAN-EOS-R5",
-    Category: "Cameras",
-    Price: 3899.99,
-    Supplier: "Canon Inc.",
-    Location: "Delhi"
-  },
-  {
-    Id: "12",
-    Product: "DJI Air 3 Drone Fly More Combo",
-    Current_Stock: 2,
-    Recommended_Order: 6,
-    Status: "Low Stock",
-    SKU: "DJI-AIR3-FMC",
-    Category: "Drones",
-    Price: 1199.99,
-    Supplier: "DJI Technology",
-    Location: "Chandigarh"
-  },
-  {
-    Id: "13",
-    Product: "LG C3 65\" OLED 4K Smart TV",
-    Current_Stock: 0,
-    Recommended_Order: 7,
-    Status: "Out of Stock",
-    SKU: "LG-OLED65C3-4K",
-    Category: "TVs",
-    Price: 1899.99,
-    Supplier: "LG Electronics",
-    Location: "Jalandhar"
-  },
-  {
-    Id: "14",
-    Product: "Apple AirPods Pro (2nd Generation)",
-    Current_Stock: 22,
-    Recommended_Order: 15,
-    Status: "In Stock",
-    SKU: "APP-APP-2",
-    Category: "Audio",
-    Price: 249.99,
-    Supplier: "Apple Inc.",
-    Location: "Ludhiana"
-  },
-  {
-    Id: "15",
-    Product: "Dell XPS 15 (Intel i9, 32GB RAM, 1TB SSD, RTX 4070)",
-    Current_Stock: 3,
-    Recommended_Order: 5,
-    Status: "Low Stock",
-    SKU: "DELL-XPS15-i9-32",
+    Audience_Fit: "Medium",
+    Confidence: "Medium",
+    Market_Sentiment: "Mixed",
+    Prediction: "May succeed",
+    SKU: "HP-R5-7520U",
     Category: "Laptops",
-    Price: 2499.99,
-    Supplier: "Dell Inc.",
-    Location: "Delhi"
+    Price: 55999.99,
+    Supplier: "HP Inc.",
+    Location: "Hyderabad"
   }
 ];
 
@@ -211,8 +118,8 @@ const fetchExternalInventory = async (): Promise<ExternalInventoryItem[]> => {
   console.log("Fetching external inventory data from API...");
   
   try {
-    // Fetch from the real API
-    const response = await fetch("https://inventory-api-hybt.onrender.com/api/inventory");
+    // Fetch from the real API - using the new endpoint
+    const response = await fetch("https://llmhacksmith.vercel.app/api/inventory");
     
     if (!response.ok) {
       console.warn(`API request failed with status ${response.status}, falling back to mock data`);
@@ -234,9 +141,9 @@ const fetchExternalInventory = async (): Promise<ExternalInventoryItem[]> => {
       Id: item.Id || `api-${index + 1}`,
       // Set default values for missing fields
       SKU: item.SKU || `SKU-${index + 1}`,
-      Category: item.Category || "Uncategorized",
-      Price: item.Price || 0,
-      Supplier: item.Supplier || "Unknown Supplier",
+      Category: item.Category || determineCategory(item.Product),
+      Price: item.Price || estimatePrice(item.Product),
+      Supplier: item.Supplier || determineSupplier(item.Product),
       Location: item.Location || "Delhi"
     }));
     
@@ -254,12 +161,69 @@ const fetchExternalInventory = async (): Promise<ExternalInventoryItem[]> => {
   }
 };
 
+// Helper function to determine category from product name
+const determineCategory = (productName: string): string => {
+  const productNameLower = productName.toLowerCase();
+  if (productNameLower.includes("ac") || productNameLower.includes("ton") || 
+      productNameLower.includes("air conditioner") || productNameLower.includes("split")) {
+    return "Air Conditioners";
+  } else if (productNameLower.includes("laptop") || 
+            productNameLower.includes("intel") || 
+            productNameLower.includes("amd") || 
+            productNameLower.includes("ryzen") || 
+            productNameLower.includes("core")) {
+    return "Laptops";
+  } else {
+    return "Electronics";
+  }
+};
+
+// Helper function to estimate price from product name
+const estimatePrice = (productName: string): number => {
+  const productNameLower = productName.toLowerCase();
+  if (productNameLower.includes("laptop") || 
+      productNameLower.includes("intel i7") || 
+      productNameLower.includes("ryzen 7")) {
+    return 75000 + Math.random() * 25000;
+  } else if (productNameLower.includes("laptop") || 
+            productNameLower.includes("intel i5") || 
+            productNameLower.includes("ryzen 5")) {
+    return 55000 + Math.random() * 20000;
+  } else if (productNameLower.includes("ac") || 
+            productNameLower.includes("air conditioner") || 
+            productNameLower.includes("ton")) {
+    return 35000 + Math.random() * 15000;
+  } else {
+    return 15000 + Math.random() * 10000;
+  }
+};
+
+// Helper function to determine supplier from product name
+const determineSupplier = (productName: string): string => {
+  const productNameLower = productName.toLowerCase();
+  if (productNameLower.includes("hp")) {
+    return "HP Inc.";
+  } else if (productNameLower.includes("samsung")) {
+    return "Samsung Electronics";
+  } else if (productNameLower.includes("haier")) {
+    return "Haier Electronics";
+  } else if (productNameLower.includes("blue star")) {
+    return "Blue Star Ltd";
+  } else if (productNameLower.includes("voltas")) {
+    return "Voltas Ltd";
+  } else if (productNameLower.includes("panasonic")) {
+    return "Panasonic Corporation";
+  } else {
+    return "Unknown Supplier";
+  }
+};
+
 const updateExternalInventoryItem = async (item: ExternalInventoryItem): Promise<ExternalInventoryItem> => {
   console.log("Updating item:", item);
   
   try {
     // In a real scenario, we would call the API to update the item
-    // const response = await fetch("https://inventory-api-hybt.onrender.com/api/inventory/update", {
+    // const response = await fetch("https://llmhacksmith.vercel.app/api/inventory/update", {
     //   method: "PUT",
     //   headers: { "Content-Type": "application/json" },
     //   body: JSON.stringify(item)
@@ -283,7 +247,7 @@ const deleteExternalInventoryItem = async (itemId: string): Promise<{ id: string
   
   try {
     // In a real scenario, we would call the API to delete the item
-    // const response = await fetch(`https://inventory-api-hybt.onrender.com/api/inventory/${itemId}`, {
+    // const response = await fetch(`https://llmhacksmith.vercel.app/api/inventory/${itemId}`, {
     //   method: "DELETE"
     // });
     
@@ -302,7 +266,7 @@ const addExternalInventoryItem = async (item: ExternalInventoryItem): Promise<Ex
   
   try {
     // In a real scenario, we would call the API to add the item
-    // const response = await fetch("https://inventory-api-hybt.onrender.com/api/inventory", {
+    // const response = await fetch("https://llmhacksmith.vercel.app/api/inventory", {
     //   method: "POST",
     //   headers: { "Content-Type": "application/json" },
     //   body: JSON.stringify(item)
