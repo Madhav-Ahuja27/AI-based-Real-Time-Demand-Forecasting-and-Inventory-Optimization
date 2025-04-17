@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { fetchProductForecast, getRecommendedReorderAmount, placeOrder } from "@/lib/mock-api";
 import { useExternalInventoryForReordering } from "@/hooks/useExternalInventoryData";
@@ -434,13 +433,15 @@ export default function ReorderingSystem() {
   );
   
   const recommendedProducts = filteredProducts.filter(p => 
-    p.stockLevel > p.minStockLevel && 
-    p.stockLevel <= p.reorderPoint &&
-    recommendations[p.id]?.recommendedQuantity > 0
+    (p.stockLevel > p.minStockLevel && 
+     p.stockLevel <= p.reorderPoint &&
+     recommendations[p.id]?.recommendedQuantity > 0) ||
+    ((p as any).audience_fit === "Medium" && p.stockLevel < 10 && p.stockLevel > 0)
   );
   
   const optimalProducts = filteredProducts.filter(p => 
-    p.stockLevel > p.reorderPoint && p.stockLevel <= p.maxStockLevel
+    p.stockLevel > p.reorderPoint && p.stockLevel <= p.maxStockLevel &&
+    !((p as any).audience_fit === "Medium" && p.stockLevel < 10)
   );
 
   return (
