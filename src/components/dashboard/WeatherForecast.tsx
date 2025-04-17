@@ -1,24 +1,73 @@
 
 import { WeatherData } from "@/lib/mock-data";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
-import { CloudSun, Cloud, CloudRain, Snowflake, CloudLightning } from "lucide-react";
+import { CloudSun, Cloud, CloudRain, Snowflake, CloudLightning, RefreshCw, Loader2 } from "lucide-react";
+import { useState } from "react";
 
 interface WeatherForecastProps {
   weatherData: WeatherData[];
   className?: string;
+  isLoading?: boolean;
+  isError?: boolean;
+  onRefresh?: () => void;
 }
 
-export function WeatherForecast({ weatherData, className }: WeatherForecastProps) {
-  if (!weatherData.length) {
+export function WeatherForecast({ 
+  weatherData, 
+  className, 
+  isLoading = false, 
+  isError = false,
+  onRefresh 
+}: WeatherForecastProps) {
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = () => {
+    if (!onRefresh) return;
+    
+    setIsRefreshing(true);
+    onRefresh();
+    
+    // Reset refreshing state after a short delay
+    setTimeout(() => setIsRefreshing(false), 1000);
+  };
+
+  if (isLoading) {
     return (
       <Card className={className}>
-        <CardHeader>
+        <CardHeader className="bg-muted/50">
           <CardTitle>Weather Forecast</CardTitle>
         </CardHeader>
+        <CardContent className="flex items-center justify-center py-16">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (isError || !weatherData.length) {
+    return (
+      <Card className={className}>
+        <CardHeader className="bg-muted/50">
+          <div className="flex items-center justify-between">
+            <CardTitle>Weather Forecast</CardTitle>
+            {onRefresh && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+              >
+                <RefreshCw className={cn("h-4 w-4 mr-1", isRefreshing && "animate-spin")} />
+                Retry
+              </Button>
+            )}
+          </div>
+        </CardHeader>
         <CardContent className="text-center py-8 text-muted-foreground">
-          No weather data available
+          {isError ? "Failed to load weather data" : "No weather data available"}
         </CardContent>
       </Card>
     );
@@ -63,7 +112,20 @@ export function WeatherForecast({ weatherData, className }: WeatherForecastProps
   return (
     <Card className={cn("overflow-hidden", className)}>
       <CardHeader className="bg-muted/50">
-        <CardTitle>Weather Forecast</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle>Weather Forecast</CardTitle>
+          {onRefresh && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+            >
+              <RefreshCw className={cn("h-4 w-4 mr-1", isRefreshing && "animate-spin")} />
+              Refresh
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="p-0">
         <div className="grid grid-cols-5 divide-x">
@@ -84,6 +146,11 @@ export function WeatherForecast({ weatherData, className }: WeatherForecastProps
               <div className={cn("text-xs mt-2 font-medium", getImpactClass(weather.impact))}>
                 Sales Impact: {weather.impact > 0 ? "+" : ""}{Math.round(weather.impact * 100)}%
               </div>
+              {weather.precipitation > 0 && (
+                <div className="text-xs mt-1 text-muted-foreground">
+                  Precip: {Math.round(weather.precipitation)}%
+                </div>
+              )}
             </div>
           ))}
         </div>

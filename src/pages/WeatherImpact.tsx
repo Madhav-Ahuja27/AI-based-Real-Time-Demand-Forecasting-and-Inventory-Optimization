@@ -1,42 +1,44 @@
+
 import { useEffect, useState } from "react";
-import { fetchProducts, fetchWeatherData, fetchProductForecast } from "@/lib/mock-api";
-import { WeatherData, Product, Forecast } from "@/lib/mock-data";
+import { fetchProducts, fetchProductForecast } from "@/lib/mock-api";
+import { Product, Forecast } from "@/lib/mock-data";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LineChart } from "@/components/charts/LineChart";
 import { WeatherForecast } from "@/components/dashboard/WeatherForecast";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CloudSun, CloudRain, Umbrella, Snowflake, CloudLightning, ArrowUp, ArrowDown } from "lucide-react";
+import { CloudSun, CloudRain, Umbrella, Snowflake, CloudLightning, ArrowUp, ArrowDown, Loader2 } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import { useWeatherForecast } from "@/hooks/useWeatherData";
+import { toast } from "sonner";
 
 export default function WeatherImpact() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [weatherData, setWeatherData] = useState<WeatherData[]>([]);
   const [forecasts, setForecasts] = useState<Forecast[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<string>("store-001");
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+
+  // Use our new weather hook
+  const { weatherData, isLoading: isLoadingWeather, isError: isWeatherError, refetch: refetchWeather } = useWeatherForecast(selectedLocation);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        setIsLoading(true);
-        const [productsData, weatherForecast] = await Promise.all([
-          fetchProducts(),
-          fetchWeatherData()
-        ]);
+        setIsLoadingProducts(true);
+        const productsData = await fetchProducts();
         
         setProducts(productsData);
-        setWeatherData(weatherForecast);
         
         if (productsData.length > 0) {
           setSelectedProduct(productsData[0].id);
         }
       } catch (error) {
         console.error("Error loading weather impact data:", error);
+        toast.error("Failed to load product data");
       } finally {
-        setIsLoading(false);
+        setIsLoadingProducts(false);
       }
     };
     
@@ -51,6 +53,7 @@ export default function WeatherImpact() {
           setForecasts(forecast);
         } catch (error) {
           console.error("Error loading product forecast:", error);
+          toast.error("Failed to load forecast data");
         }
       };
       
@@ -58,9 +61,7 @@ export default function WeatherImpact() {
     }
   }, [selectedProduct]);
 
-  const locationWeatherData = weatherData.filter(w => w.locationId === selectedLocation);
-  
-  const combinedData = locationWeatherData.map(weather => {
+  const combinedData = weatherData.map(weather => {
     const forecast = forecasts.find(f => f.date === weather.date);
     
     return {
@@ -126,8 +127,11 @@ export default function WeatherImpact() {
           </CardHeader>
           <CardContent>
             <WeatherForecast 
-              weatherData={locationWeatherData}
+              weatherData={weatherData}
               className="border-none shadow-none p-0"
+              isLoading={isLoadingWeather}
+              isError={isWeatherError}
+              onRefresh={refetchWeather}
             />
           </CardContent>
         </Card>
@@ -207,9 +211,12 @@ export default function WeatherImpact() {
             </div>
           </CardHeader>
           <CardContent>
-            {isLoading ? (
+            {isLoadingProducts || isLoadingWeather ? (
               <div className="h-[300px] flex items-center justify-center">
-                <span className="text-muted-foreground">Loading impact data...</span>
+                <div className="flex flex-col items-center">
+                  <Loader2 className="h-8 w-8 animate-spin mb-2" />
+                  <span className="text-muted-foreground">Loading impact data...</span>
+                </div>
               </div>
             ) : (
               <LineChart
@@ -231,28 +238,34 @@ export default function WeatherImpact() {
             <CardDescription>Products most affected by weather</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {weatherSensitiveProducts.map((product, index) => (
-                <div key={index} className="flex items-center justify-between pb-2 border-b last:border-0">
-                  <div>
-                    <p className="font-medium">{product.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {getImpactDescription(product.weatherImpact)}
-                    </p>
+            {isLoadingProducts ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin" />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {weatherSensitiveProducts.map((product, index) => (
+                  <div key={index} className="flex items-center justify-between pb-2 border-b last:border-0">
+                    <div>
+                      <p className="font-medium">{product.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {getImpactDescription(product.weatherImpact)}
+                      </p>
+                    </div>
+                    <div className={`flex items-center ${getWeatherProductImpactClass(product.weatherImpact)}`}>
+                      {product.weatherImpact > 0 ? (
+                        <ArrowUp className="h-4 w-4 mr-1" />
+                      ) : (
+                        <ArrowDown className="h-4 w-4 mr-1" />
+                      )}
+                      <span className="font-medium">
+                        {Math.abs(Math.round(product.weatherImpact * 100))}%
+                      </span>
+                    </div>
                   </div>
-                  <div className={`flex items-center ${getWeatherProductImpactClass(product.weatherImpact)}`}>
-                    {product.weatherImpact > 0 ? (
-                      <ArrowUp className="h-4 w-4 mr-1" />
-                    ) : (
-                      <ArrowDown className="h-4 w-4 mr-1" />
-                    )}
-                    <span className="font-medium">
-                      {Math.abs(Math.round(product.weatherImpact * 100))}%
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -331,7 +344,7 @@ export default function WeatherImpact() {
                           : "bg-rose-100 text-rose-800 border-rose-300"
                       }`}
                     >
-                      {item.impact} Demand
+                      {item.impact}
                     </Badge>
                   </TableCell>
                   <TableCell>{item.action}</TableCell>
