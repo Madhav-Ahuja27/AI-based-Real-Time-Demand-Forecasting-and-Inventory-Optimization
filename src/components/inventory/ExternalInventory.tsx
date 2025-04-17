@@ -140,6 +140,8 @@ export function ExternalInventory() {
       Price: Number(editValues.Price)
     };
     
+    console.log("Saving updated item:", updatedItem);
+    
     updateItem(updatedItem, {
       onSuccess: () => {
         toast.success("Inventory item updated successfully");
@@ -653,6 +655,7 @@ export function ExternalInventory() {
                                     variant="outline" 
                                     size="sm"
                                     disabled={isUpdating}
+                                    type="button"
                                   >
                                     <Save className="h-4 w-4 mr-1" />
                                     Save
@@ -661,6 +664,7 @@ export function ExternalInventory() {
                                     onClick={cancelEditing} 
                                     variant="ghost" 
                                     size="sm"
+                                    type="button"
                                   >
                                     <X className="h-4 w-4 mr-1" />
                                     Cancel

@@ -44,12 +44,11 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, onClick, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
     
-    // Enhance the onClick handler to prevent default for link buttons
+    // Fix: Modified onClick handler to only prevent default for non-submit buttons
     const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-      if (props.type === 'submit') {
-        // Let the form submission happen naturally
-      } else {
-        // For non-submit buttons, prevent default to be safe
+      // Don't prevent default for submit buttons or when no type is specified
+      // This allows button actions to proceed normally
+      if (props.type !== 'submit' && props.type === 'button') {
         event.preventDefault();
       }
       
