@@ -26,7 +26,13 @@ import {
   Trash2,
   FileDown,
   Search,
-  Loader2
+  Loader2,
+  ThumbsUp,
+  ThumbsDown,
+  HelpCircle,
+  TrendingUp,
+  TrendingDown,
+  Shuffle
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -58,11 +64,16 @@ export function ExternalInventory() {
     Category: "",
     Price: 0,
     Supplier: "",
-    Location: "Delhi"
+    Location: "Delhi",
+    Audience_Fit: "Medium",
+    Confidence: "Medium",
+    Market_Sentiment: "Mixed",
+    Prediction: "May succeed"
   });
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
+  const [activeView, setActiveView] = useState("basic");
 
   const uniqueCategories = Array.from(
     new Set(inventory.map(item => item.Category).filter(Boolean))
@@ -107,6 +118,72 @@ export function ExternalInventory() {
     }
   };
 
+  const getAudienceFitBadge = (audienceFit: string | null) => {
+    if (!audienceFit) return (
+      <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-300">
+        <HelpCircle className="w-3 h-3 mr-1" /> Unknown
+      </Badge>
+    );
+
+    switch (audienceFit.toLowerCase()) {
+      case "high":
+        return (
+          <Badge variant="outline" className="bg-emerald-100 text-emerald-800 border-emerald-300">
+            <ThumbsUp className="w-3 h-3 mr-1" /> High
+          </Badge>
+        );
+      case "medium":
+        return (
+          <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300">
+            <Shuffle className="w-3 h-3 mr-1" /> Medium
+          </Badge>
+        );
+      case "low":
+        return (
+          <Badge variant="outline" className="bg-rose-100 text-rose-800 border-rose-300">
+            <ThumbsDown className="w-3 h-3 mr-1" /> Low
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant="secondary">{audienceFit}</Badge>
+        );
+    }
+  };
+
+  const getMarketSentimentBadge = (sentiment: string | null) => {
+    if (!sentiment) return (
+      <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-300">
+        <HelpCircle className="w-3 h-3 mr-1" /> Unknown
+      </Badge>
+    );
+
+    switch (sentiment.toLowerCase()) {
+      case "positive":
+        return (
+          <Badge variant="outline" className="bg-emerald-100 text-emerald-800 border-emerald-300">
+            <TrendingUp className="w-3 h-3 mr-1" /> Positive
+          </Badge>
+        );
+      case "mixed":
+        return (
+          <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300">
+            <Shuffle className="w-3 h-3 mr-1" /> Mixed
+          </Badge>
+        );
+      case "negative":
+        return (
+          <Badge variant="outline" className="bg-rose-100 text-rose-800 border-rose-300">
+            <TrendingDown className="w-3 h-3 mr-1" /> Negative
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant="secondary">{sentiment}</Badge>
+        );
+    }
+  };
+
   const startEditing = (item: ExternalInventoryItem) => {
     setEditingItem(item);
     setEditValues({
@@ -118,7 +195,11 @@ export function ExternalInventory() {
       Category: item.Category || "",
       Price: item.Price || 0,
       Supplier: item.Supplier || "",
-      Location: item.Location || ""
+      Location: item.Location || "",
+      Audience_Fit: item.Audience_Fit || "Medium",
+      Confidence: item.Confidence || "Medium",
+      Market_Sentiment: item.Market_Sentiment || "Mixed",
+      Prediction: item.Prediction || "May succeed"
     });
     toast.info(`Editing ${item.Product}`);
   };
@@ -204,7 +285,11 @@ export function ExternalInventory() {
           Category: "",
           Price: 0,
           Supplier: "",
-          Location: "Delhi"
+          Location: "Delhi",
+          Audience_Fit: "Medium",
+          Confidence: "Medium",
+          Market_Sentiment: "Mixed",
+          Prediction: "May succeed"
         });
       },
       onError: (error) => {
@@ -393,6 +478,99 @@ export function ExternalInventory() {
       </TableCell>
     </>
   );
+
+  const renderPredictionInfo = (item: ExternalInventoryItem, isEditing: boolean) => (
+    <>
+      <TableCell>
+        {isEditing ? (
+          <Select
+            value={editValues.Audience_Fit || ""}
+            onValueChange={(value) => handleInputChange('Audience_Fit', value)}
+          >
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Select fit" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="High">High</SelectItem>
+              <SelectItem value="Medium">Medium</SelectItem>
+              <SelectItem value="Low">Low</SelectItem>
+            </SelectContent>
+          </Select>
+        ) : (
+          getAudienceFitBadge(item.Audience_Fit)
+        )}
+      </TableCell>
+      <TableCell>
+        {isEditing ? (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Select
+                value={editValues.Confidence || ""}
+                onValueChange={(value) => handleInputChange('Confidence', value)}
+              >
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="Select confidence" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="High">High</SelectItem>
+                  <SelectItem value="Medium">Medium</SelectItem>
+                  <SelectItem value="Low">Low</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2 pt-1">
+              <Select
+                value={editValues.Market_Sentiment || ""}
+                onValueChange={(value) => handleInputChange('Market_Sentiment', value)}
+              >
+                <SelectTrigger className="w-32 h-7 text-xs">
+                  <SelectValue placeholder="Sentiment" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Positive">Positive</SelectItem>
+                  <SelectItem value="Mixed">Mixed</SelectItem>
+                  <SelectItem value="Negative">Negative</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        ) : (
+          <div>
+            {item.Confidence && <div className="mb-1 text-sm">{item.Confidence} confidence</div>}
+            {getMarketSentimentBadge(item.Market_Sentiment)}
+          </div>
+        )}
+      </TableCell>
+      <TableCell>
+        {isEditing ? (
+          <Select
+            value={editValues.Prediction || ""}
+            onValueChange={(value) => handleInputChange('Prediction', value)}
+          >
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Select prediction" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Will succeed">Will succeed</SelectItem>
+              <SelectItem value="May succeed">May succeed</SelectItem>
+              <SelectItem value="May fail">May fail</SelectItem>
+              <SelectItem value="Will fail">Will fail</SelectItem>
+            </SelectContent>
+          </Select>
+        ) : (
+          <div>
+            <div className={`
+              ${item.Prediction?.toLowerCase().includes("succeed") ? "text-emerald-600" : ""}
+              ${item.Prediction?.toLowerCase().includes("fail") ? "text-rose-600" : ""}
+              font-medium
+            `}>
+              {item.Prediction || "No prediction"}
+            </div>
+          </div>
+        )}
+      </TableCell>
+    </>
+  );
   
   return (
     <Card>
@@ -440,7 +618,7 @@ export function ExternalInventory() {
                 Add Item
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[550px]">
+            <DialogContent className="sm:max-w-[650px]">
               <DialogHeader>
                 <DialogTitle>Add New Inventory Item</DialogTitle>
                 <DialogDescription>
@@ -458,6 +636,7 @@ export function ExternalInventory() {
                     className="w-full"
                   />
                 </div>
+                
                 <div>
                   <label htmlFor="sku" className="block text-sm font-medium mb-1">SKU</label>
                   <Input
@@ -549,6 +728,73 @@ export function ExternalInventory() {
                     </SelectContent>
                   </Select>
                 </div>
+                
+                {/* New fields for market analysis */}
+                <div>
+                  <label htmlFor="audience-fit" className="block text-sm font-medium mb-1">Audience Fit</label>
+                  <Select
+                    value={newItem.Audience_Fit as string}
+                    onValueChange={(value) => handleNewItemChange('Audience_Fit', value)}
+                  >
+                    <SelectTrigger id="audience-fit" className="w-full">
+                      <SelectValue placeholder="Select fit" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="High">High</SelectItem>
+                      <SelectItem value="Medium">Medium</SelectItem>
+                      <SelectItem value="Low">Low</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label htmlFor="confidence" className="block text-sm font-medium mb-1">Confidence</label>
+                  <Select
+                    value={newItem.Confidence as string}
+                    onValueChange={(value) => handleNewItemChange('Confidence', value)}
+                  >
+                    <SelectTrigger id="confidence" className="w-full">
+                      <SelectValue placeholder="Select confidence" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="High">High</SelectItem>
+                      <SelectItem value="Medium">Medium</SelectItem>
+                      <SelectItem value="Low">Low</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label htmlFor="market-sentiment" className="block text-sm font-medium mb-1">Market Sentiment</label>
+                  <Select
+                    value={newItem.Market_Sentiment as string}
+                    onValueChange={(value) => handleNewItemChange('Market_Sentiment', value)}
+                  >
+                    <SelectTrigger id="market-sentiment" className="w-full">
+                      <SelectValue placeholder="Select sentiment" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Positive">Positive</SelectItem>
+                      <SelectItem value="Mixed">Mixed</SelectItem>
+                      <SelectItem value="Negative">Negative</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label htmlFor="prediction" className="block text-sm font-medium mb-1">Prediction</label>
+                  <Select
+                    value={newItem.Prediction as string}
+                    onValueChange={(value) => handleNewItemChange('Prediction', value)}
+                  >
+                    <SelectTrigger id="prediction" className="w-full">
+                      <SelectValue placeholder="Select prediction" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Will succeed">Will succeed</SelectItem>
+                      <SelectItem value="May succeed">May succeed</SelectItem>
+                      <SelectItem value="May fail">May fail</SelectItem>
+                      <SelectItem value="Will fail">Will fail</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               
               <DialogFooter>
@@ -594,6 +840,23 @@ export function ExternalInventory() {
               <option key={category} value={category}>{category}</option>
             ))}
           </select>
+
+          <div className="flex gap-2 ml-auto">
+            <Button 
+              size="sm" 
+              variant={activeView === "basic" ? "default" : "outline"}
+              onClick={() => setActiveView("basic")}
+            >
+              Basic View
+            </Button>
+            <Button 
+              size="sm" 
+              variant={activeView === "analysis" ? "default" : "outline"}
+              onClick={() => setActiveView("analysis")}
+            >
+              Market Analysis
+            </Button>
+          </div>
         </div>
       
         <Tabs defaultValue="all" className="mb-4">
@@ -634,191 +897,17 @@ export function ExternalInventory() {
                         <TableHead>Product</TableHead>
                         <TableHead>Current Stock</TableHead>
                         <TableHead>Recommended Order</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Price & Category</TableHead>
-                        <TableHead>Supplier & Location</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredInventory.map((item, index) => {
-                        const isEditing = editingItem === item;
-                        return (
-                          <TableRow key={index}>
-                            {renderBasicInfo(item, isEditing)}
-                            {renderExtendedInfo(item, isEditing)}
-                            <TableCell>
-                              {isEditing ? (
-                                <div className="flex space-x-2">
-                                  <Button 
-                                    onClick={saveChanges} 
-                                    variant="outline" 
-                                    size="sm"
-                                    disabled={isUpdating}
-                                    type="button"
-                                  >
-                                    <Save className="h-4 w-4 mr-1" />
-                                    Save
-                                  </Button>
-                                  <Button 
-                                    onClick={cancelEditing} 
-                                    variant="ghost" 
-                                    size="sm"
-                                    type="button"
-                                  >
-                                    <X className="h-4 w-4 mr-1" />
-                                    Cancel
-                                  </Button>
-                                </div>
-                              ) : (
-                                <div className="flex space-x-2">
-                                  <Button 
-                                    onClick={() => startEditing(item)} 
-                                    variant="ghost" 
-                                    size="sm"
-                                  >
-                                    <Edit className="h-4 w-4 mr-1" />
-                                    Edit
-                                  </Button>
-                                  <Button 
-                                    onClick={() => handleDeleteItem(item)} 
-                                    variant="ghost" 
-                                    size="sm"
-                                    className="text-rose-500 hover:text-rose-700"
-                                    disabled={isDeleting}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="low">
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Product</TableHead>
-                        <TableHead>Current Stock</TableHead>
-                        <TableHead>Recommended Order</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Price & Category</TableHead>
-                        <TableHead>Supplier & Location</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredInventory
-                        .filter(item => item.Status.toLowerCase() === 'low stock')
-                        .map((item, index) => {
-                          const isEditing = editingItem === item;
-                          return (
-                            <TableRow key={index}>
-                              {renderBasicInfo(item, isEditing)}
-                              {renderExtendedInfo(item, isEditing)}
-                              <TableCell>
-                                {isEditing ? (
-                                  <div className="flex space-x-2">
-                                    <Button onClick={saveChanges} variant="outline" size="sm" disabled={isUpdating}>
-                                      <Save className="h-4 w-4 mr-1" />Save
-                                    </Button>
-                                    <Button onClick={cancelEditing} variant="ghost" size="sm">
-                                      <X className="h-4 w-4 mr-1" />Cancel
-                                    </Button>
-                                  </div>
-                                ) : (
-                                  <div className="flex space-x-2">
-                                    <Button onClick={() => startEditing(item)} variant="ghost" size="sm">
-                                      <Edit className="h-4 w-4 mr-1" />Edit
-                                    </Button>
-                                    <Button 
-                                      onClick={() => handleDeleteItem(item)} 
-                                      variant="ghost" 
-                                      size="sm" 
-                                      className="text-rose-500 hover:text-rose-700"
-                                      disabled={isDeleting}
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                )}
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                    </TableBody>
-                  </Table>
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="out">
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Product</TableHead>
-                        <TableHead>Current Stock</TableHead>
-                        <TableHead>Recommended Order</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Price & Category</TableHead>
-                        <TableHead>Supplier & Location</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredInventory
-                        .filter(item => item.Status.toLowerCase() === 'out of stock')
-                        .map((item, index) => {
-                          const isEditing = editingItem === item;
-                          return (
-                            <TableRow key={index}>
-                              {renderBasicInfo(item, isEditing)}
-                              {renderExtendedInfo(item, isEditing)}
-                              <TableCell>
-                                {isEditing ? (
-                                  <div className="flex space-x-2">
-                                    <Button onClick={saveChanges} variant="outline" size="sm" disabled={isUpdating}>
-                                      <Save className="h-4 w-4 mr-1" />Save
-                                    </Button>
-                                    <Button onClick={cancelEditing} variant="ghost" size="sm">
-                                      <X className="h-4 w-4 mr-1" />Cancel
-                                    </Button>
-                                  </div>
-                                ) : (
-                                  <div className="flex space-x-2">
-                                    <Button onClick={() => startEditing(item)} variant="ghost" size="sm">
-                                      <Edit className="h-4 w-4 mr-1" />Edit
-                                    </Button>
-                                    <Button 
-                                      onClick={() => handleDeleteItem(item)} 
-                                      variant="ghost" 
-                                      size="sm" 
-                                      className="text-rose-500 hover:text-rose-700"
-                                      disabled={isDeleting}
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                )}
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                    </TableBody>
-                  </Table>
-                </div>
-              </TabsContent>
-            </>
-          )}
-        </Tabs>
-      </CardContent>
-    </Card>
-  );
-}
+                        {activeView === "basic" ? (
+                          <>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Price & Category</TableHead>
+                            <TableHead>Supplier & Location</TableHead>
+                          </>
+                        ) : (
+                          <>
+                            <TableHead>Audience Fit</TableHead>
+                            <TableHead>Confidence & Sentiment</TableHead>
+                            <TableHead>Prediction</TableHead>
+                          </>
+                        )}
+                        <TableHead>Actions</TableHead
