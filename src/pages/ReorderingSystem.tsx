@@ -429,7 +429,8 @@ export default function ReorderingSystem() {
   );
   
   const urgentProducts = filteredProducts.filter(p => 
-    p.stockLevel <= p.minStockLevel && recommendations[p.id]?.recommendedQuantity > 0
+    p.stockLevel <= p.minStockLevel && 
+    recommendations[p.id]?.recommendedQuantity > 0
   );
   
   const recommendedProducts = filteredProducts.filter(p => 
@@ -549,7 +550,9 @@ export default function ReorderingSystem() {
                     ) : urgentProducts.length > 0 ? (
                       urgentProducts.map((product) => {
                         const rec = recommendations[product.id];
-                        const predictedStock = rec?.reasoning.predictedStock;
+                        if (!rec) return null; // Skip if no recommendation
+                        
+                        const predictedStock = rec.reasoning.predictedStock;
                         
                         return (
                           <TableRow key={product.id}>
@@ -632,6 +635,8 @@ export default function ReorderingSystem() {
                       recommendedProducts.map((product) => {
                         const rec = recommendations[product.id];
                         const predictedStock = rec?.reasoning.predictedStock;
+                        const recommendedQuantity = rec?.recommendedQuantity || 
+                           Math.max(0, Math.round((product.reorderPoint - product.stockLevel) * 1.5));
                         
                         return (
                           <TableRow key={product.id}>
@@ -663,7 +668,7 @@ export default function ReorderingSystem() {
                               </div>
                             </TableCell>
                             <TableCell>
-                              <div className="font-medium">{rec.recommendedQuantity} units</div>
+                              <div className="font-medium">{recommendedQuantity} units</div>
                               <div className="text-xs text-muted-foreground">{product.leadTime} days lead time</div>
                             </TableCell>
                             <TableCell className="text-right">
