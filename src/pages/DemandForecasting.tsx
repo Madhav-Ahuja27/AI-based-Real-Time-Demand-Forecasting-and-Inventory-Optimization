@@ -29,7 +29,33 @@ const RAW_FORECAST_DATA = `2025-04-01,P101,Laptop,69,4,3,71,1200,85200,91
 2025-04-01,P117,Gaming Keyboard,48,-1,2,50,100,5000,91
 2025-04-01,P118,Gaming Mouse,53,4,3,61,80,4880,91
 2025-04-01,P119,Gaming Headset,62,5,-2,69,120,8280,91
-2025-04-01,P120,Gaming Chair,46,1,2,48,200,9600,91`;
+2025-04-01,P120,Gaming Chair,46,1,2,48,200,9600,91
+2025-04-01,P121,Gaming Monitor,73,2,7,73,400,29200,91
+2025-04-01,P122,Graphics Card,58,1,5,60,600,36000,91
+2025-04-01,P123,CPU,60,3,-2,67,350,23450,91
+2025-04-01,P124,Motherboard,42,2,1,54,200,10800,91
+2025-04-01,P125,RAM,46,6,2,54,80,4320,91
+2025-04-01,P126,SSD,37,-2,7,32,120,3840,91
+2025-04-01,P127,HDD,39,2,-1,50,60,3000,91
+2025-04-01,P128,Power Supply,51,3,2,58,100,5800,91
+2025-04-01,P129,PC Case,48,6,3,55,80,4400,91
+2025-04-01,P130,CPU Cooler,38,4,3,37,50,1850,91
+2025-04-01,P131,Monitor Stand,72,2,4,74,30,2220,91
+2025-04-01,P132,Mouse Pad,65,2,2,71,10,710,91
+2025-04-01,P133,Thermal Paste,43,3,4,45,5,225,91
+2025-04-01,P134,Cable Management Kit,63,1,0,64,15,960,91
+2025-04-01,P135,WiFi Adapter,48,3,7,51,20,1020,91
+2025-04-01,P136,External DVD Drive,42,0,4,48,50,2400,91
+2025-04-01,P137,Printer Cable,62,1,3,66,5,330,91
+2025-04-01,P138,Keyboard Cleaner,59,5,-1,74,8,592,91
+2025-04-01,P139,Laptop Cooling Pad,61,2,1,64,20,1280,91
+2025-04-01,P140,USB Hub,63,-1,3,59,15,885,91
+2025-04-01,P141,Anti-Glare Screen Protector,63,0,0,69,10,690,91
+2025-04-01,P142,USB-C Adapter,43,2,1,52,15,780,91
+2025-04-01,P143,Laptop Sleeve,56,3,7,60,20,1200,91
+2025-04-01,P144,Wireless Charger,62,2,0,69,30,2070,91
+2025-04-01,P145,USB-C Cable,59,3,6,62,8,496,91
+2025-04-01,P146,Gaming Desk,30,-1,0,33,150,4950,91`;
 
 export default function DemandForecasting() {
   const { data: products = [], isLoading: isProductsLoading } = useProducts();
@@ -93,52 +119,52 @@ export default function DemandForecasting() {
   const isLoading = isProductsLoading || isSalesLoading || isForecastLoading;
   
   const fullForecastData = [
-    { productName: "RAM", predictionDate: "2025-04-16", predictedStock: 35.71, r2Score: 0.8825 },
-    { productName: "SSD", predictionDate: "2025-04-16", predictedStock: 40.46, r2Score: 0.8781 },
-    { productName: "HDD", predictionDate: "2025-04-16", predictedStock: 55.04, r2Score: 0.8841 },
-    { productName: "Power Supply", predictionDate: "2025-04-16", predictedStock: 73.17, r2Score: 0.8749 },
-    { productName: "PC Case", predictionDate: "2025-04-16", predictedStock: 64.11, r2Score: 0.8801 },
-    { productName: "CPU Cooler", predictionDate: "2025-04-16", predictedStock: 40.12, r2Score: 0.8871 },
-    { productName: "Monitor Stand", predictionDate: "2025-04-16", predictedStock: 23.32, r2Score: 0.8817 },
-    { productName: "Mouse Pad", predictionDate: "2025-04-16", predictedStock: 52.47, r2Score: 0.8841 },
-    { productName: "Thermal Paste", predictionDate: "2025-04-16", predictedStock: 56.18, r2Score: 0.8766 },
-    { productName: "Wireless Charger", predictionDate: "2025-04-16", predictedStock: 63.84, r2Score: 0.8825 },
-    { productName: "WiFi Adapter", predictionDate: "2025-04-16", predictedStock: 63.95, r2Score: 0.9000 },
-    { productName: "External DVD Drive", predictionDate: "2025-04-16", predictedStock: 32.66, r2Score: 0.8830 },
-    { productName: "Printer Cable", predictionDate: "2025-04-16", predictedStock: 45.06, r2Score: 0.8857 },
-    { productName: "Keyboard Cleaner", predictionDate: "2025-04-16", predictedStock: 64.19, r2Score: 0.8817 },
-    { productName: "Laptop Cooling Pad", predictionDate: "2025-04-16", predictedStock: 72.24, r2Score: 0.8833 },
-    { productName: "USB Hub", predictionDate: "2025-04-16", predictedStock: 36.29, r2Score: 0.8875 },
-    { productName: "Anti-Glare Screen Protector", predictionDate: "2025-04-16", predictedStock: 56.64, r2Score: 0.8676 },
-    { productName: "USB-C Adapter", predictionDate: "2025-04-16", predictedStock: 51.63, r2Score: 0.8807 },
-    { productName: "Laptop Sleeve", predictionDate: "2025-04-16", predictedStock: 40.57, r2Score: 0.8824 },
-    { productName: "Motherboard", predictionDate: "2025-04-16", predictedStock: 45.34, r2Score: 0.8732 },
-    { productName: "Cable Management Kit", predictionDate: "2025-04-16", predictedStock: 52.35, r2Score: 0.8867 },
-    { productName: "CPU", predictionDate: "2025-04-16", predictedStock: 40.17, r2Score: 0.8926 },
-    { productName: "Desk Lamp", predictionDate: "2025-04-16", predictedStock: 56.29, r2Score: 0.8694 },
-    { productName: "Gaming Monitor", predictionDate: "2025-04-16", predictedStock: 65.86, r2Score: 0.8894 },
-    { productName: "USB-C Cable", predictionDate: "2025-04-16", predictedStock: 29.67, r2Score: 0.8762 },
-    { productName: "Laptop", predictionDate: "2025-04-16", predictedStock: 58.58, r2Score: 0.8760 },
-    { productName: "Monitor", predictionDate: "2025-04-16", predictedStock: 76.08, r2Score: 0.8835 },
-    { productName: "Keyboard", predictionDate: "2025-04-16", predictedStock: 42.51, r2Score: 0.8827 },
-    { productName: "Headphones", predictionDate: "2025-04-16", predictedStock: 45.30, r2Score: 0.8744 },
-    { productName: "Smartphone", predictionDate: "2025-04-16", predictedStock: 36.09, r2Score: 0.8889 },
-    { productName: "Tablet", predictionDate: "2025-04-16", predictedStock: 57.11, r2Score: 0.8866 },
-    { productName: "Router", predictionDate: "2025-04-16", predictedStock: 35.33, r2Score: 0.8854 },
-    { productName: "External Hard Drive", predictionDate: "2025-04-16", predictedStock: 59.53, r2Score: 0.8790 },
-    { productName: "Graphics Card", predictionDate: "2025-04-16", predictedStock: 34.45, r2Score: 0.8821 },
-    { productName: "Wireless Earbuds", predictionDate: "2025-04-16", predictedStock: 28.74, r2Score: 0.8839 },
-    { productName: "Desk Chair", predictionDate: "2025-04-16", predictedStock: 40.71, r2Score: 0.8809 },
-    { productName: "USB Flash Drive", predictionDate: "2025-04-16", predictedStock: 28.60, r2Score: 0.8713 },
-    { productName: "Ethernet Cable", predictionDate: "2025-04-16", predictedStock: 33.64, r2Score: 0.8600 },
-    { productName: "Power Strip", predictionDate: "2025-04-16", predictedStock: 34.32, r2Score: 0.8776 },
-    { productName: "Wireless Mouse", predictionDate: "2025-04-16", predictedStock: 37.14, r2Score: 0.8810 },
-    { productName: "Gaming Keyboard", predictionDate: "2025-04-16", predictedStock: 43.34, r2Score: 0.8811 },
-    { productName: "Gaming Mouse", predictionDate: "2025-04-16", predictedStock: 56.12, r2Score: 0.8838 },
-    { productName: "Gaming Headset", predictionDate: "2025-04-16", predictedStock: 51.23, r2Score: 0.8858 },
-    { productName: "Gaming Chair", predictionDate: "2025-04-16", predictedStock: 39.31, r2Score: 0.8811 },
-    { productName: "Webcam", predictionDate: "2025-04-16", predictedStock: 60.50, r2Score: 0.8890 },
-    { productName: "Gaming Desk", predictionDate: "2025-04-16", predictedStock: 60.49, r2Score: 0.8827 }
+    { productName: "RAM", predictionDate: "2025-04-16", predictedStock: 35.48, r2Score: 0.9011 },
+    { productName: "SSD", predictionDate: "2025-04-16", predictedStock: 41.54, r2Score: 0.8945 },
+    { productName: "HDD", predictionDate: "2025-04-16", predictedStock: 56.71, r2Score: 0.9002 },
+    { productName: "Power Supply", predictionDate: "2025-04-16", predictedStock: 75.28, r2Score: 0.8950 },
+    { productName: "PC Case", predictionDate: "2025-04-16", predictedStock: 64.56, r2Score: 0.8958 },
+    { productName: "CPU Cooler", predictionDate: "2025-04-16", predictedStock: 39.87, r2Score: 0.9043 },
+    { productName: "Monitor Stand", predictionDate: "2025-04-16", predictedStock: 27.39, r2Score: 0.8963 },
+    { productName: "Mouse Pad", predictionDate: "2025-04-16", predictedStock: 54.10, r2Score: 0.8997 },
+    { productName: "Thermal Paste", predictionDate: "2025-04-16", predictedStock: 59.02, r2Score: 0.8966 },
+    { productName: "Wireless Charger", predictionDate: "2025-04-16", predictedStock: 63.92, r2Score: 0.9005 },
+    { productName: "WiFi Adapter", predictionDate: "2025-04-16", predictedStock: 66.39, r2Score: 0.9128 },
+    { productName: "External DVD Drive", predictionDate: "2025-04-16", predictedStock: 32.21, r2Score: 0.9012 },
+    { productName: "Printer Cable", predictionDate: "2025-04-16", predictedStock: 44.97, r2Score: 0.8998 },
+    { productName: "Keyboard Cleaner", predictionDate: "2025-04-16", predictedStock: 66.25, r2Score: 0.9001 },
+    { productName: "Laptop Cooling Pad", predictionDate: "2025-04-16", predictedStock: 70.23, r2Score: 0.8997 },
+    { productName: "USB Hub", predictionDate: "2025-04-16", predictedStock: 37.47, r2Score: 0.9055 },
+    { productName: "Anti-Glare Screen Protector", predictionDate: "2025-04-16", predictedStock: 56.29, r2Score: 0.8865 },
+    { productName: "USB-C Adapter", predictionDate: "2025-04-16", predictedStock: 52.24, r2Score: 0.8948 },
+    { productName: "Laptop Sleeve", predictionDate: "2025-04-16", predictedStock: 41.88, r2Score: 0.8997 },
+    { productName: "Motherboard", predictionDate: "2025-04-16", predictedStock: 48.82, r2Score: 0.8925 },
+    { productName: "Cable Management Kit", predictionDate: "2025-04-16", predictedStock: 49.95, r2Score: 0.9044 },
+    { productName: "CPU", predictionDate: "2025-04-16", predictedStock: 41.20, r2Score: 0.9064 },
+    { productName: "Desk Lamp", predictionDate: "2025-04-16", predictedStock: 56.48, r2Score: 0.8908 },
+    { productName: "Gaming Monitor", predictionDate: "2025-04-16", predictedStock: 63.85, r2Score: 0.9044 },
+    { productName: "USB-C Cable", predictionDate: "2025-04-16", predictedStock: 34.10, r2Score: 0.8962 },
+    { productName: "Laptop", predictionDate: "2025-04-16", predictedStock: 62.44, r2Score: 0.8956 },
+    { productName: "Monitor", predictionDate: "2025-04-16", predictedStock: 74.04, r2Score: 0.8997 },
+    { productName: "Keyboard", predictionDate: "2025-04-16", predictedStock: 42.87, r2Score: 0.9021 },
+    { productName: "Headphones", predictionDate: "2025-04-16", predictedStock: 49.55, r2Score: 0.8927 },
+    { productName: "Smartphone", predictionDate: "2025-04-16", predictedStock: 37.47, r2Score: 0.9513 },
+    { productName: "Tablet", predictionDate: "2025-04-16", predictedStock: 58.77, r2Score: 0.9023 },
+    { productName: "Router", predictionDate: "2025-04-16", predictedStock: 36.49, r2Score: 0.9023 },
+    { productName: "External Hard Drive", predictionDate: "2025-04-16", predictedStock: 61.23, r2Score: 0.8960 },
+    { productName: "Graphics Card", predictionDate: "2025-04-16", predictedStock: 35.31, r2Score: 0.8984 },
+    { productName: "Wireless Earbuds", predictionDate: "2025-04-16", predictedStock: 29.06, r2Score: 0.8984 },
+    { productName: "Desk Chair", predictionDate: "2025-04-16", predictedStock: 41.48, r2Score: 0.9006 },
+    { productName: "USB Flash Drive", predictionDate: "2025-04-16", predictedStock: 34.54, r2Score: 0.8896 },
+    { productName: "Ethernet Cable", predictionDate: "2025-04-16", predictedStock: 35.47, r2Score: 0.8826 },
+    { productName: "Power Strip", predictionDate: "2025-04-16", predictedStock: 34.26, r2Score: 0.8912 },
+    { productName: "Wireless Mouse", predictionDate: "2025-04-16", predictedStock: 42.32, r2Score: 0.8906 },
+    { productName: "Gaming Keyboard", predictionDate: "2025-04-16", predictedStock: 41.17, r2Score: 0.8973 },
+    { productName: "Gaming Mouse", predictionDate: "2025-04-16", predictedStock: 57.22, r2Score: 0.9006 },
+    { productName: "Gaming Headset", predictionDate: "2025-04-16", predictedStock: 54.10, r2Score: 0.9022 },
+    { productName: "Gaming Chair", predictionDate: "2025-04-16", predictedStock: 40.50, r2Score: 0.8993 },
+    { productName: "Webcam", predictionDate: "2025-04-16", predictedStock: 62.69, r2Score: 0.9043 },
+    { productName: "Gaming Desk", predictionDate: "2025-04-16", predictedStock: 60.30, r2Score: 0.9003 }
   ];
 
   return (
