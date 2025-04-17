@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useExternalInventory, useUpdateExternalInventory, ExternalInventoryItem } from "@/hooks/useExternalInventoryData";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -16,7 +15,7 @@ export function ExternalInventory() {
   const { mutate: updateItem, isPending: isUpdating } = useUpdateExternalInventory();
   const [editingItem, setEditingItem] = useState<ExternalInventoryItem | null>(null);
   const [editValues, setEditValues] = useState<Partial<ExternalInventoryItem>>({});
-  
+
   const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
       case "in stock":
@@ -238,7 +237,7 @@ export function ExternalInventory() {
       </TableCell>
     </>
   );
-  
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -278,160 +277,162 @@ export function ExternalInventory() {
               <span className="text-muted-foreground">No inventory items found</span>
             </div>
           ) : (
-            <TabsContent value="all">
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Product</TableHead>
-                      <TableHead>Current Stock</TableHead>
-                      <TableHead>Recommended Order</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Price & Category</TableHead>
-                      <TableHead>Supplier & Location</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {inventory.map((item, index) => {
-                      const isEditing = editingItem === item;
-                      return (
-                        <TableRow key={index}>
-                          {renderBasicInfo(item, isEditing)}
-                          {renderExtendedInfo(item, isEditing)}
-                          <TableCell>
-                            {isEditing ? (
-                              <div className="flex space-x-2">
+            <>
+              <TabsContent value="all">
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Product</TableHead>
+                        <TableHead>Current Stock</TableHead>
+                        <TableHead>Recommended Order</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Price & Category</TableHead>
+                        <TableHead>Supplier & Location</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {inventory.map((item, index) => {
+                        const isEditing = editingItem === item;
+                        return (
+                          <TableRow key={index}>
+                            {renderBasicInfo(item, isEditing)}
+                            {renderExtendedInfo(item, isEditing)}
+                            <TableCell>
+                              {isEditing ? (
+                                <div className="flex space-x-2">
+                                  <Button 
+                                    onClick={saveChanges} 
+                                    variant="outline" 
+                                    size="sm"
+                                    disabled={isUpdating}
+                                  >
+                                    <Save className="h-4 w-4 mr-1" />
+                                    Save
+                                  </Button>
+                                  <Button 
+                                    onClick={cancelEditing} 
+                                    variant="ghost" 
+                                    size="sm"
+                                  >
+                                    <X className="h-4 w-4 mr-1" />
+                                    Cancel
+                                  </Button>
+                                </div>
+                              ) : (
                                 <Button 
-                                  onClick={saveChanges} 
-                                  variant="outline" 
-                                  size="sm"
-                                  disabled={isUpdating}
-                                >
-                                  <Save className="h-4 w-4 mr-1" />
-                                  Save
-                                </Button>
-                                <Button 
-                                  onClick={cancelEditing} 
+                                  onClick={() => startEditing(item)} 
                                   variant="ghost" 
                                   size="sm"
                                 >
-                                  <X className="h-4 w-4 mr-1" />
-                                  Cancel
-                                </Button>
-                              </div>
-                            ) : (
-                              <Button 
-                                onClick={() => startEditing(item)} 
-                                variant="ghost" 
-                                size="sm"
-                              >
-                                <Edit className="h-4 w-4 mr-1" />
-                                Edit
-                              </Button>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      )
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="low">
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Product</TableHead>
-                      <TableHead>Current Stock</TableHead>
-                      <TableHead>Recommended Order</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Price & Category</TableHead>
-                      <TableHead>Supplier & Location</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {inventory
-                      .filter(item => item.Status.toLowerCase() === 'low stock')
-                      .map((item, index) => {
-                        const isEditing = editingItem === item;
-                        return (
-                          <TableRow key={index}>
-                            {renderBasicInfo(item, isEditing)}
-                            {renderExtendedInfo(item, isEditing)}
-                            <TableCell>
-                              {isEditing ? (
-                                <div className="flex space-x-2">
-                                  <Button onClick={saveChanges} variant="outline" size="sm" disabled={isUpdating}>
-                                    <Save className="h-4 w-4 mr-1" />Save
-                                  </Button>
-                                  <Button onClick={cancelEditing} variant="ghost" size="sm">
-                                    <X className="h-4 w-4 mr-1" />Cancel
-                                  </Button>
-                                </div>
-                              ) : (
-                                <Button onClick={() => startEditing(item)} variant="ghost" size="sm">
-                                  <Edit className="h-4 w-4 mr-1" />Edit
+                                  <Edit className="h-4 w-4 mr-1" />
+                                  Edit
                                 </Button>
                               )}
                             </TableCell>
                           </TableRow>
-                        )
+                        );
                       })}
-                  </TableBody>
-                </Table>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="out">
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Product</TableHead>
-                      <TableHead>Current Stock</TableHead>
-                      <TableHead>Recommended Order</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Price & Category</TableHead>
-                      <TableHead>Supplier & Location</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {inventory
-                      .filter(item => item.Status.toLowerCase() === 'out of stock')
-                      .map((item, index) => {
-                        const isEditing = editingItem === item;
-                        return (
-                          <TableRow key={index}>
-                            {renderBasicInfo(item, isEditing)}
-                            {renderExtendedInfo(item, isEditing)}
-                            <TableCell>
-                              {isEditing ? (
-                                <div className="flex space-x-2">
-                                  <Button onClick={saveChanges} variant="outline" size="sm" disabled={isUpdating}>
-                                    <Save className="h-4 w-4 mr-1" />Save
+                    </TableBody>
+                  </Table>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="low">
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Product</TableHead>
+                        <TableHead>Current Stock</TableHead>
+                        <TableHead>Recommended Order</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Price & Category</TableHead>
+                        <TableHead>Supplier & Location</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {inventory
+                        .filter(item => item.Status.toLowerCase() === 'low stock')
+                        .map((item, index) => {
+                          const isEditing = editingItem === item;
+                          return (
+                            <TableRow key={index}>
+                              {renderBasicInfo(item, isEditing)}
+                              {renderExtendedInfo(item, isEditing)}
+                              <TableCell>
+                                {isEditing ? (
+                                  <div className="flex space-x-2">
+                                    <Button onClick={saveChanges} variant="outline" size="sm" disabled={isUpdating}>
+                                      <Save className="h-4 w-4 mr-1" />Save
+                                    </Button>
+                                    <Button onClick={cancelEditing} variant="ghost" size="sm">
+                                      <X className="h-4 w-4 mr-1" />Cancel
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <Button onClick={() => startEditing(item)} variant="ghost" size="sm">
+                                    <Edit className="h-4 w-4 mr-1" />Edit
                                   </Button>
-                                  <Button onClick={cancelEditing} variant="ghost" size="sm">
-                                    <X className="h-4 w-4 mr-1" />Cancel
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="out">
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Product</TableHead>
+                        <TableHead>Current Stock</TableHead>
+                        <TableHead>Recommended Order</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Price & Category</TableHead>
+                        <TableHead>Supplier & Location</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {inventory
+                        .filter(item => item.Status.toLowerCase() === 'out of stock')
+                        .map((item, index) => {
+                          const isEditing = editingItem === item;
+                          return (
+                            <TableRow key={index}>
+                              {renderBasicInfo(item, isEditing)}
+                              {renderExtendedInfo(item, isEditing)}
+                              <TableCell>
+                                {isEditing ? (
+                                  <div className="flex space-x-2">
+                                    <Button onClick={saveChanges} variant="outline" size="sm" disabled={isUpdating}>
+                                      <Save className="h-4 w-4 mr-1" />Save
+                                    </Button>
+                                    <Button onClick={cancelEditing} variant="ghost" size="sm">
+                                      <X className="h-4 w-4 mr-1" />Cancel
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <Button onClick={() => startEditing(item)} variant="ghost" size="sm">
+                                    <Edit className="h-4 w-4 mr-1" />Edit
                                   </Button>
-                                </div>
-                              ) : (
-                                <Button onClick={() => startEditing(item)} variant="ghost" size="sm">
-                                  <Edit className="h-4 w-4 mr-1" />Edit
-                                </Button>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        )
-                      })}
-                  </TableBody>
-                </Table>
-              </div>
-            </TabsContent>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </TabsContent>
+            </>
           )}
         </Tabs>
       </CardContent>
