@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { fetchProducts, fetchProductForecast, getRecommendedReorderAmount, placeOrder } from "@/lib/mock-api";
 import { Product } from "@/lib/mock-data";
@@ -12,11 +11,63 @@ import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, CheckCircle2, RefreshCw, Search, FileDown, Settings, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
+// Import for the detailed forecast data
+import { parseForecastData } from "@/lib/data-parser";
+
+// Raw forecast data
+const RAW_FORECAST_DATA = `2025-04-01,P101,Laptop,69,4,3,62.44,1200,85200,91
+2025-04-01,P102,Monitor,67,-1,1,74.04,500,33500,91
+2025-04-01,P103,Keyboard,60,5,3,42.87,50,3450,91
+2025-04-01,P104,Headphones,40,3,6,49.55,100,4300,91
+2025-04-01,P105,Smartphone,29,1,-1,37.47,900,29700,91
+2025-04-01,P106,Tablet,40,3,2,58.77,700,31500,91
+2025-04-01,P107,Router,51,3,2,36.49,150,8700,91
+2025-04-01,P108,External Hard Drive,49,6,7,61.23,200,10600,91
+2025-04-01,P109,Wireless Earbuds,72,2,3,29.06,80,6320,91
+2025-04-01,P110,Webcam,55,4,0,62.69,60,4020,91
+2025-04-01,P111,Desk Chair,65,4,7,41.48,150,10050,91
+2025-04-01,P112,Desk Lamp,50,3,2,56.48,30,1680,91
+2025-04-01,P113,USB Flash Drive,46,4,-1,34.54,20,1180,91
+2025-04-01,P114,Ethernet Cable,42,3,4,35.47,10,420,91
+2025-04-01,P115,Power Strip,62,3,-1,34.26,25,1750,91
+2025-04-01,P116,Wireless Mouse,64,1,4,42.32,40,2600,91
+2025-04-01,P117,Gaming Keyboard,48,-1,2,41.17,100,5000,91
+2025-04-01,P118,Gaming Mouse,53,4,3,57.22,80,4880,91
+2025-04-01,P119,Gaming Headset,62,5,-2,54.10,120,8280,91
+2025-04-01,P120,Gaming Chair,46,1,2,40.50,200,9600,91
+2025-04-01,P121,Gaming Monitor,73,2,7,63.85,400,29200,91
+2025-04-01,P122,Graphics Card,58,1,5,35.31,600,36000,91
+2025-04-01,P123,CPU,60,3,-2,41.20,350,23450,91
+2025-04-01,P124,Motherboard,42,2,1,48.82,200,10800,91
+2025-04-01,P125,RAM,46,6,2,35.48,80,4320,91
+2025-04-01,P126,SSD,37,-2,7,41.54,120,3840,91
+2025-04-01,P127,HDD,39,2,-1,56.71,60,3000,91
+2025-04-01,P128,Power Supply,51,3,2,75.28,100,5800,91
+2025-04-01,P129,PC Case,48,6,3,64.56,80,4400,91
+2025-04-01,P130,CPU Cooler,38,4,3,39.87,50,1850,91
+2025-04-01,P131,Monitor Stand,72,2,4,27.39,30,2220,91
+2025-04-01,P132,Mouse Pad,65,2,2,54.10,10,710,91
+2025-04-01,P133,Thermal Paste,43,3,4,59.02,5,225,91
+2025-04-01,P134,Cable Management Kit,63,1,0,49.95,15,960,91
+2025-04-01,P135,WiFi Adapter,48,3,7,66.39,20,1020,91
+2025-04-01,P136,External DVD Drive,42,0,4,32.21,50,2400,91
+2025-04-01,P137,Printer Cable,62,1,3,44.97,5,330,91
+2025-04-01,P138,Keyboard Cleaner,59,5,-1,66.25,8,592,91
+2025-04-01,P139,Laptop Cooling Pad,61,2,1,70.23,20,1280,91
+2025-04-01,P140,USB Hub,63,-1,3,37.47,15,885,91
+2025-04-01,P141,Anti-Glare Screen Protector,63,0,0,56.29,10,690,91
+2025-04-01,P142,USB-C Adapter,43,2,1,52.24,15,780,91
+2025-04-01,P143,Laptop Sleeve,56,3,7,41.88,20,1200,91
+2025-04-01,P144,Wireless Charger,62,2,0,63.92,30,2070,91
+2025-04-01,P145,USB-C Cable,59,3,6,34.10,8,496,91
+2025-04-01,P146,Gaming Desk,30,-1,0,60.30,150,4950,91`;
+
 interface ReorderRecommendation {
   productId: string;
   recommendedQuantity: number;
   reasoning: {
     currentStock: number;
+    predictedStock: number; // Added predicted stock from forecast
     avgDailyDemand: number;
     leadTime: number;
     safetyStock: number;
@@ -24,6 +75,62 @@ interface ReorderRecommendation {
     socialImpact: number;
   };
 }
+
+// Create forecast data lookup map
+const forecastDataMap = new Map();
+const fullForecastData = [
+  { productName: "RAM", predictionDate: "2025-04-16", predictedStock: 35.48, r2Score: 0.9011 },
+  { productName: "SSD", predictionDate: "2025-04-16", predictedStock: 41.54, r2Score: 0.8945 },
+  { productName: "HDD", predictionDate: "2025-04-16", predictedStock: 56.71, r2Score: 0.9002 },
+  { productName: "Power Supply", predictionDate: "2025-04-16", predictedStock: 75.28, r2Score: 0.8950 },
+  { productName: "PC Case", predictionDate: "2025-04-16", predictedStock: 64.56, r2Score: 0.8958 },
+  { productName: "CPU Cooler", predictionDate: "2025-04-16", predictedStock: 39.87, r2Score: 0.9043 },
+  { productName: "Monitor Stand", predictionDate: "2025-04-16", predictedStock: 27.39, r2Score: 0.8963 },
+  { productName: "Mouse Pad", predictionDate: "2025-04-16", predictedStock: 54.10, r2Score: 0.8997 },
+  { productName: "Thermal Paste", predictionDate: "2025-04-16", predictedStock: 59.02, r2Score: 0.8966 },
+  { productName: "Wireless Charger", predictionDate: "2025-04-16", predictedStock: 63.92, r2Score: 0.9005 },
+  { productName: "WiFi Adapter", predictionDate: "2025-04-16", predictedStock: 66.39, r2Score: 0.9128 },
+  { productName: "External DVD Drive", predictionDate: "2025-04-16", predictedStock: 32.21, r2Score: 0.9012 },
+  { productName: "Printer Cable", predictionDate: "2025-04-16", predictedStock: 44.97, r2Score: 0.8998 },
+  { productName: "Keyboard Cleaner", predictionDate: "2025-04-16", predictedStock: 66.25, r2Score: 0.9001 },
+  { productName: "Laptop Cooling Pad", predictionDate: "2025-04-16", predictedStock: 70.23, r2Score: 0.8997 },
+  { productName: "USB Hub", predictionDate: "2025-04-16", predictedStock: 37.47, r2Score: 0.9055 },
+  { productName: "Anti-Glare Screen Protector", predictionDate: "2025-04-16", predictedStock: 56.29, r2Score: 0.8865 },
+  { productName: "USB-C Adapter", predictionDate: "2025-04-16", predictedStock: 52.24, r2Score: 0.8948 },
+  { productName: "Laptop Sleeve", predictionDate: "2025-04-16", predictedStock: 41.88, r2Score: 0.8997 },
+  { productName: "Motherboard", predictionDate: "2025-04-16", predictedStock: 48.82, r2Score: 0.8925 },
+  { productName: "Cable Management Kit", predictionDate: "2025-04-16", predictedStock: 49.95, r2Score: 0.9044 },
+  { productName: "CPU", predictionDate: "2025-04-16", predictedStock: 41.20, r2Score: 0.9064 },
+  { productName: "Desk Lamp", predictionDate: "2025-04-16", predictedStock: 56.48, r2Score: 0.8908 },
+  { productName: "Gaming Monitor", predictionDate: "2025-04-16", predictedStock: 63.85, r2Score: 0.9044 },
+  { productName: "USB-C Cable", predictionDate: "2025-04-16", predictedStock: 34.10, r2Score: 0.8962 },
+  { productName: "Laptop", predictionDate: "2025-04-16", predictedStock: 62.44, r2Score: 0.8956 },
+  { productName: "Monitor", predictionDate: "2025-04-16", predictedStock: 74.04, r2Score: 0.8997 },
+  { productName: "Keyboard", predictionDate: "2025-04-16", predictedStock: 42.87, r2Score: 0.9021 },
+  { productName: "Headphones", predictionDate: "2025-04-16", predictedStock: 49.55, r2Score: 0.8927 },
+  { productName: "Smartphone", predictionDate: "2025-04-16", predictedStock: 37.47, r2Score: 0.9513 },
+  { productName: "Tablet", predictionDate: "2025-04-16", predictedStock: 58.77, r2Score: 0.9023 },
+  { productName: "Router", predictionDate: "2025-04-16", predictedStock: 36.49, r2Score: 0.9023 },
+  { productName: "External Hard Drive", predictionDate: "2025-04-16", predictedStock: 61.23, r2Score: 0.8960 },
+  { productName: "Graphics Card", predictionDate: "2025-04-16", predictedStock: 35.31, r2Score: 0.8984 },
+  { productName: "Wireless Earbuds", predictionDate: "2025-04-16", predictedStock: 29.06, r2Score: 0.8984 },
+  { productName: "Desk Chair", predictionDate: "2025-04-16", predictedStock: 41.48, r2Score: 0.9006 },
+  { productName: "USB Flash Drive", predictionDate: "2025-04-16", predictedStock: 34.54, r2Score: 0.8896 },
+  { productName: "Ethernet Cable", predictionDate: "2025-04-16", predictedStock: 35.47, r2Score: 0.8826 },
+  { productName: "Power Strip", predictionDate: "2025-04-16", predictedStock: 34.26, r2Score: 0.8912 },
+  { productName: "Wireless Mouse", predictionDate: "2025-04-16", predictedStock: 42.32, r2Score: 0.8906 },
+  { productName: "Gaming Keyboard", predictionDate: "2025-04-16", predictedStock: 41.17, r2Score: 0.8973 },
+  { productName: "Gaming Mouse", predictionDate: "2025-04-16", predictedStock: 57.22, r2Score: 0.9006 },
+  { productName: "Gaming Headset", predictionDate: "2025-04-16", predictedStock: 54.10, r2Score: 0.9022 },
+  { productName: "Gaming Chair", predictionDate: "2025-04-16", predictedStock: 40.50, r2Score: 0.8993 },
+  { productName: "Webcam", predictionDate: "2025-04-16", predictedStock: 62.69, r2Score: 0.9043 },
+  { productName: "Gaming Desk", predictionDate: "2025-04-16", predictedStock: 60.30, r2Score: 0.9003 }
+];
+
+// Create lookup map
+fullForecastData.forEach(item => {
+  forecastDataMap.set(item.productName, item.predictedStock);
+});
 
 export default function ReorderingSystem() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -55,9 +162,17 @@ export default function ReorderingSystem() {
         p => p.stockLevel <= p.reorderPoint * 1.2
       );
       
-      const recommendationPromises = productsToCheck.map(p => 
-        getRecommendedReorderAmount(p.id)
-      );
+      const recommendationPromises = productsToCheck.map(async p => {
+        const rec = await getRecommendedReorderAmount(p.id);
+        
+        // Enhance recommendation with predicted stock from our forecast data if available
+        const predictedStock = forecastDataMap.get(p.name);
+        if (predictedStock !== undefined) {
+          rec.reasoning.predictedStock = predictedStock;
+        }
+        
+        return rec;
+      });
       
       const recommendationResults = await Promise.all(recommendationPromises);
       const recommendationsMap: Record<string, ReorderRecommendation> = {};
@@ -81,11 +196,17 @@ export default function ReorderingSystem() {
       const loadRecommendation = async () => {
         try {
           const recommendation = await getRecommendedReorderAmount(selectedProduct);
-          setReorderDetails(recommendation);
-          setOrderQuantity(recommendation.recommendedQuantity);
           
+          // Add predicted stock from forecast
           const product = products.find(p => p.id === selectedProduct);
           if (product) {
+            const predictedStock = forecastDataMap.get(product.name);
+            if (predictedStock !== undefined) {
+              recommendation.reasoning.predictedStock = predictedStock;
+            }
+            
+            setReorderDetails(recommendation);
+            setOrderQuantity(recommendation.recommendedQuantity);
             setSelectedSupplier(product.supplier || "");
           }
           
@@ -109,27 +230,27 @@ export default function ReorderingSystem() {
     }
   }, [selectedProduct, products]);
 
-  // Refresh data
   const handleRefresh = () => {
     setIsRefreshing(true);
     loadData();
     toast.success("Reordering data refreshed");
   };
 
-  // Export recommendations
   const handleExport = () => {
     const headers = [
-      "Product", "SKU", "Current Stock", "Recommended Order", "Status"
+      "Product", "SKU", "Current Stock", "Predicted Stock", "Recommended Order", "Status"
     ].join(",");
     
     const rows = products
       .filter(p => p.stockLevel <= p.reorderPoint * 1.2)
       .map(product => {
         const rec = recommendations[product.id];
+        const predictedStock = rec?.reasoning.predictedStock || forecastDataMap.get(product.name) || 'N/A';
         return [
           `"${product.name}"`,
           product.sku,
           product.stockLevel,
+          predictedStock,
           rec ? rec.recommendedQuantity : 0,
           product.stockLevel <= product.minStockLevel ? "Critical" : "Reorder Soon"
         ].join(",");
@@ -149,7 +270,6 @@ export default function ReorderingSystem() {
     toast.success("Reorder recommendations exported successfully");
   };
 
-  // Place order
   const handlePlaceOrder = async () => {
     if (!reorderDetails || !selectedProduct) return;
     
@@ -307,6 +427,7 @@ export default function ReorderingSystem() {
                     <TableRow>
                       <TableHead>Product</TableHead>
                       <TableHead>Current Stock</TableHead>
+                      <TableHead>Predicted Stock</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Recommended Order</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
@@ -315,7 +436,7 @@ export default function ReorderingSystem() {
                   <TableBody>
                     {isLoading ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="h-24">
+                        <TableCell colSpan={6} className="h-24">
                           <div className="flex justify-center items-center">
                             <RefreshCw className="h-5 w-5 animate-spin mr-2" />
                             Loading reorder data...
@@ -323,36 +444,46 @@ export default function ReorderingSystem() {
                         </TableCell>
                       </TableRow>
                     ) : urgentProducts.length > 0 ? (
-                      urgentProducts.map((product) => (
-                        <TableRow key={product.id}>
-                          <TableCell>
-                            <div className="font-medium">{product.name}</div>
-                            <div className="text-xs text-muted-foreground">SKU: {product.sku}</div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="font-medium text-rose-500">{product.stockLevel} units</div>
-                            <div className="text-xs text-muted-foreground">Min: {product.minStockLevel}</div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="destructive" className="flex items-center gap-1">
-                              <AlertTriangle className="h-3 w-3" />
-                              Critical
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="font-medium">{recommendations[product.id]?.recommendedQuantity} units</div>
-                            <div className="text-xs text-muted-foreground">{product.leadTime} days lead time</div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button size="sm" onClick={() => setSelectedProduct(product.id)}>
-                              Order Now
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
+                      urgentProducts.map((product) => {
+                        const rec = recommendations[product.id];
+                        const predictedStock = rec?.reasoning.predictedStock || forecastDataMap.get(product.name);
+                        
+                        return (
+                          <TableRow key={product.id}>
+                            <TableCell>
+                              <div className="font-medium">{product.name}</div>
+                              <div className="text-xs text-muted-foreground">SKU: {product.sku}</div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="font-medium text-rose-500">{product.stockLevel} units</div>
+                              <div className="text-xs text-muted-foreground">Min: {product.minStockLevel}</div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="font-medium">
+                                {predictedStock !== undefined ? predictedStock.toFixed(2) : "N/A"}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="destructive" className="flex items-center gap-1">
+                                <AlertTriangle className="h-3 w-3" />
+                                Critical
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="font-medium">{rec.recommendedQuantity} units</div>
+                              <div className="text-xs text-muted-foreground">{product.leadTime} days lead time</div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button size="sm" onClick={() => setSelectedProduct(product.id)}>
+                                Order Now
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={5} className="h-24 text-center">
+                        <TableCell colSpan={6} className="h-24 text-center">
                           No urgent reorders needed.
                         </TableCell>
                       </TableRow>
@@ -369,6 +500,7 @@ export default function ReorderingSystem() {
                     <TableRow>
                       <TableHead>Product</TableHead>
                       <TableHead>Current Stock</TableHead>
+                      <TableHead>Predicted Stock</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Recommended Order</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
@@ -377,7 +509,7 @@ export default function ReorderingSystem() {
                   <TableBody>
                     {isLoading ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="h-24">
+                        <TableCell colSpan={6} className="h-24">
                           <div className="flex justify-center items-center">
                             <RefreshCw className="h-5 w-5 animate-spin mr-2" />
                             Loading reorder data...
@@ -385,280 +517,24 @@ export default function ReorderingSystem() {
                         </TableCell>
                       </TableRow>
                     ) : recommendedProducts.length > 0 ? (
-                      recommendedProducts.map((product) => (
-                        <TableRow key={product.id}>
-                          <TableCell>
-                            <div className="font-medium">{product.name}</div>
-                            <div className="text-xs text-muted-foreground">SKU: {product.sku}</div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="font-medium text-amber-500">{product.stockLevel} units</div>
-                            <div className="text-xs text-muted-foreground">Reorder: {product.reorderPoint}</div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="flex items-center gap-1 bg-amber-100 text-amber-800 border-amber-300">
-                              <RefreshCw className="h-3 w-3" />
-                              Reorder Soon
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="font-medium">{recommendations[product.id]?.recommendedQuantity} units</div>
-                            <div className="text-xs text-muted-foreground">{product.leadTime} days lead time</div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => setSelectedProduct(product.id)}
-                            >
-                              View Details
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={5} className="h-24 text-center">
-                          No recommended reorders at this time.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="optimal" className="m-0">
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Product</TableHead>
-                      <TableHead>Current Stock</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Days Until Reorder</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {isLoading ? (
-                      <TableRow>
-                        <TableCell colSpan={5} className="h-24">
-                          <div className="flex justify-center items-center">
-                            <RefreshCw className="h-5 w-5 animate-spin mr-2" />
-                            Loading inventory data...
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ) : optimalProducts.slice(0, 5).length > 0 ? (
-                      optimalProducts.slice(0, 5).map((product) => (
-                        <TableRow key={product.id}>
-                          <TableCell>
-                            <div className="font-medium">{product.name}</div>
-                            <div className="text-xs text-muted-foreground">SKU: {product.sku}</div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="font-medium">{product.stockLevel} units</div>
-                            <div className="text-xs text-muted-foreground">Reorder: {product.reorderPoint}</div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="flex items-center gap-1 bg-emerald-100 text-emerald-800 border-emerald-300">
-                              <CheckCircle2 className="h-3 w-3" />
-                              Optimal
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="font-medium">
-                              {Math.round((product.stockLevel - product.reorderPoint) / product.salesVelocity)} days
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              At current sales velocity
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => setSelectedProduct(product.id)}
-                            >
-                              View Details
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={5} className="h-24 text-center">
-                          No products at optimal stock level.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-      
-      {reorderDetails && selectedProduct && (
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              Reorder Details: {products.find(p => p.id === selectedProduct)?.name}
-            </CardTitle>
-            <CardDescription>
-              Detailed breakdown of reorder recommendation
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="text-lg font-medium mb-4">Recommendation Details</h3>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="rounded-lg bg-muted/50 p-3">
-                      <div className="text-sm text-muted-foreground">Current Stock</div>
-                      <div className="text-xl font-medium">{reorderDetails.reasoning.currentStock} units</div>
-                    </div>
-                    <div className="rounded-lg bg-muted/50 p-3">
-                      <div className="text-sm text-muted-foreground">Recommended Order</div>
-                      <div className="text-xl font-medium">{reorderDetails.recommendedQuantity} units</div>
-                    </div>
-                    <div className="rounded-lg bg-muted/50 p-3">
-                      <div className="text-sm text-muted-foreground">Avg. Daily Demand</div>
-                      <div className="text-xl font-medium">{reorderDetails.reasoning.avgDailyDemand.toFixed(2)} units</div>
-                    </div>
-                    <div className="rounded-lg bg-muted/50 p-3">
-                      <div className="text-sm text-muted-foreground">Lead Time</div>
-                      <div className="text-xl font-medium">{reorderDetails.reasoning.leadTime} days</div>
-                    </div>
-                    <div className="rounded-lg bg-muted/50 p-3">
-                      <div className="text-sm text-muted-foreground">Safety Stock</div>
-                      <div className="text-xl font-medium">{reorderDetails.reasoning.safetyStock.toFixed(0)} units</div>
-                    </div>
-                    <div className="rounded-lg bg-muted/50 p-3">
-                      <div className="text-sm text-muted-foreground">Total Forecast</div>
-                      <div className="text-xl font-medium">
-                        {(reorderDetails.reasoning.avgDailyDemand * reorderDetails.reasoning.leadTime).toFixed(0)} units
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h4 className="text-sm font-medium mb-2">External Impact Factors</h4>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="rounded-lg bg-muted/50 p-3">
-                        <div className="text-sm text-muted-foreground">Weather Impact</div>
-                        <div className="text-xl font-medium">
-                          {reorderDetails.reasoning.weatherImpact > 0 ? "+" : ""}
-                          {(reorderDetails.reasoning.weatherImpact * 100).toFixed(1)}%
-                        </div>
-                      </div>
-                      <div className="rounded-lg bg-muted/50 p-3">
-                        <div className="text-sm text-muted-foreground">Social Media Impact</div>
-                        <div className="text-xl font-medium">
-                          {reorderDetails.reasoning.socialImpact > 0 ? "+" : ""}
-                          {(reorderDetails.reasoning.socialImpact * 100).toFixed(1)}%
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="mt-6">
-                  <h4 className="text-sm font-medium mb-2">Reorder Calculation</h4>
-                  <div className="rounded-lg bg-muted/50 p-4 text-sm">
-                    <p className="mb-2"><strong>Lead Time Demand:</strong> {reorderDetails.reasoning.avgDailyDemand.toFixed(2)} units/day × {reorderDetails.reasoning.leadTime} days = {(reorderDetails.reasoning.avgDailyDemand * reorderDetails.reasoning.leadTime).toFixed(0)} units</p>
-                    <p className="mb-2"><strong>Safety Stock:</strong> {reorderDetails.reasoning.safetyStock.toFixed(0)} units</p>
-                    <p className="mb-2"><strong>Current Stock:</strong> {reorderDetails.reasoning.currentStock} units</p>
-                    <p className="mb-2"><strong>External Factor Adjustment:</strong> {Math.round((reorderDetails.reasoning.weatherImpact + reorderDetails.reasoning.socialImpact) * 10)} units</p>
-                    <p className="pt-2 border-t"><strong>Recommended Order Quantity:</strong> {reorderDetails.recommendedQuantity} units</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-medium mb-4">Order Form</h3>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Order Quantity</label>
-                      <Input 
-                        type="number" 
-                        value={orderQuantity} 
-                        onChange={(e) => setOrderQuantity(parseInt(e.target.value) || 0)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Supplier</label>
-                      <Select 
-                        value={selectedSupplier} 
-                        onValueChange={setSelectedSupplier}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select supplier" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Acme Inc">Acme Inc</SelectItem>
-                          <SelectItem value="Global Supply Co">Global Supply Co</SelectItem>
-                          <SelectItem value="Quality Products Ltd">Quality Products Ltd</SelectItem>
-                          <SelectItem value="Prime Distributors">Prime Distributors</SelectItem>
-                          <SelectItem value="Apple Inc.">Apple Inc.</SelectItem>
-                          <SelectItem value="Samsung Electronics">Samsung Electronics</SelectItem>
-                          <SelectItem value="Sony Corporation">Sony Corporation</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Expected Delivery Date</label>
-                    <Input 
-                      type="date" 
-                      value={deliveryDate}
-                      onChange={(e) => setDeliveryDate(e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Notes</label>
-                    <textarea 
-                      className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
-                      placeholder="Add any special instructions for this order"
-                      value={orderNotes}
-                      onChange={(e) => setOrderNotes(e.target.value)}
-                    />
-                  </div>
-                  
-                  <div className="pt-4 flex justify-end gap-2">
-                    <Button 
-                      variant="outline" 
-                      onClick={() => setSelectedProduct(null)}
-                      disabled={isPlacingOrder}
-                    >
-                      Cancel
-                    </Button>
-                    <Button 
-                      onClick={handlePlaceOrder}
-                      disabled={isPlacingOrder}
-                    >
-                      {isPlacingOrder ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          Placing Order...
-                        </>
-                      ) : (
-                        "Place Order"
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  );
-}
+                      recommendedProducts.map((product) => {
+                        const rec = recommendations[product.id];
+                        const predictedStock = rec?.reasoning.predictedStock || forecastDataMap.get(product.name);
+                        
+                        return (
+                          <TableRow key={product.id}>
+                            <TableCell>
+                              <div className="font-medium">{product.name}</div>
+                              <div className="text-xs text-muted-foreground">SKU: {product.sku}</div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="font-medium text-amber-500">{product.stockLevel} units</div>
+                              <div className="text-xs text-muted-foreground">Reorder: {product.reorderPoint}</div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="font-medium">
+                                {predictedStock !== undefined ? predictedStock.toFixed(2) : "N/A"}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="flex items-center gap-1 bg-amber-100 text-amber-800 border-amber-300">
