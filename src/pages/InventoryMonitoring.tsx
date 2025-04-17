@@ -1,14 +1,15 @@
+
 import { useState } from "react";
 import { useProducts, useLocations, useAlerts } from "@/hooks/useInventoryData";
-import { Product, Location } from "@/lib/mock-data";
 import { ProductTable } from "@/components/inventory/ProductTable";
 import { AlertsList } from "@/components/dashboard/AlertsList";
+import Map from "@/components/inventory/Map";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Search } from "lucide-react";
+import { AlertTriangle, Search, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function InventoryMonitoring() {
@@ -17,6 +18,7 @@ export default function InventoryMonitoring() {
   const { data: alerts = [], isLoading: isAlertsLoading } = useAlerts();
   const [selectedLocation, setSelectedLocation] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [activeView, setActiveView] = useState<"list" | "map">("list");
 
   const filteredProducts = products
     .filter(product => selectedLocation === "all" || product.locationId === selectedLocation)
@@ -96,55 +98,84 @@ export default function InventoryMonitoring() {
         </Card>
       </div>
       
-      <Card className="mb-6">
-        <CardHeader>
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <CardTitle>Inventory Status</CardTitle>
-              <CardDescription>View and filter your current inventory</CardDescription>
-            </div>
-            
-            <div className="flex gap-2 flex-col sm:flex-row w-full md:w-auto">
-              <div className="relative w-full sm:w-[200px]">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Search products..."
-                  className="pl-8"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+      <div className="mb-6 flex gap-2">
+        <Button 
+          variant={activeView === "list" ? "default" : "outline"} 
+          onClick={() => setActiveView("list")}
+        >
+          List View
+        </Button>
+        <Button 
+          variant={activeView === "map" ? "default" : "outline"} 
+          onClick={() => setActiveView("map")}
+          className="flex items-center gap-2"
+        >
+          <MapPin className="h-4 w-4" />
+          Map View
+        </Button>
+      </div>
+      
+      {activeView === "list" ? (
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <CardTitle>Inventory Status</CardTitle>
+                <CardDescription>View and filter your current inventory</CardDescription>
               </div>
               
-              <Select 
-                value={selectedLocation} 
-                onValueChange={setSelectedLocation}
-              >
-                <SelectTrigger className="w-full sm:w-[200px]">
-                  <SelectValue placeholder="Select location" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Locations</SelectItem>
-                  {locations.map(location => (
-                    <SelectItem key={location.id} value={location.id}>
-                      {location.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2 flex-col sm:flex-row w-full md:w-auto">
+                <div className="relative w-full sm:w-[200px]">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="search"
+                    placeholder="Search products..."
+                    className="pl-8"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                
+                <Select 
+                  value={selectedLocation} 
+                  onValueChange={setSelectedLocation}
+                >
+                  <SelectTrigger className="w-full sm:w-[200px]">
+                    <SelectValue placeholder="Select location" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Locations</SelectItem>
+                    {locations.map(location => (
+                      <SelectItem key={location.id} value={location.id}>
+                        {location.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="h-[300px] flex items-center justify-center">
-              <span className="text-muted-foreground">Loading inventory data...</span>
-            </div>
-          ) : (
-            <ProductTable products={filteredProducts} />
-          )}
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="h-[300px] flex items-center justify-center">
+                <span className="text-muted-foreground">Loading inventory data...</span>
+              </div>
+            ) : (
+              <ProductTable products={filteredProducts} />
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Inventory Locations</CardTitle>
+            <CardDescription>Main warehouse location in Chandigarh, India</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Map className="h-[500px] w-full" />
+          </CardContent>
+        </Card>
+      )}
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2">
