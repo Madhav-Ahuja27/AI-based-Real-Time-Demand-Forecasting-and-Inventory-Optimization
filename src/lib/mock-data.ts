@@ -1,4 +1,3 @@
-
 import { subDays, format, addDays } from "date-fns";
 
 // Types
@@ -94,33 +93,313 @@ export function getFutureDatesArray(days: number): string[] {
 
 // Mock data generators
 export function generateProducts(count = 20): Product[] {
-  const categories = ['Electronics', 'Clothing', 'Food', 'Home Goods', 'Sports'];
-  const suppliers = ['Acme Inc', 'Global Supply Co', 'Quality Products Ltd', 'Prime Distributors', 'Mega Wholesale'];
-  const locations = ['store-001', 'store-002', 'warehouse-main'];
+  const amazonLikeProducts: Product[] = [
+    {
+      id: "prod-0001",
+      name: "Apple iPhone 15 Pro Max (256GB, Natural Titanium)",
+      category: "Smartphones",
+      sku: "APL-IP15PM-256-NT",
+      price: 1199.99,
+      stockLevel: 18,
+      reorderPoint: 15,
+      minStockLevel: 10,
+      maxStockLevel: 50,
+      leadTime: 5,
+      supplier: "Apple Inc.",
+      salesVelocity: 3.5,
+      locationId: "store-001"
+    },
+    {
+      id: "prod-0002",
+      name: "Samsung Galaxy S24 Ultra (12GB RAM, 512GB)",
+      category: "Smartphones",
+      sku: "SAM-S24U-512",
+      price: 1299.99,
+      stockLevel: 8,
+      reorderPoint: 10,
+      minStockLevel: 5,
+      maxStockLevel: 30,
+      leadTime: 7,
+      supplier: "Samsung Electronics",
+      salesVelocity: 2.8,
+      locationId: "warehouse-main"
+    },
+    {
+      id: "prod-0003",
+      name: "Sony WH-1000XM5 Wireless Noise Cancelling Headphones",
+      category: "Audio",
+      sku: "SON-WH1000XM5-BLK",
+      price: 349.99,
+      stockLevel: 0,
+      reorderPoint: 15,
+      minStockLevel: 10,
+      maxStockLevel: 40,
+      leadTime: 10,
+      supplier: "Sony Corporation",
+      salesVelocity: 1.7,
+      lastReordered: format(subDays(new Date(), 3), 'yyyy-MM-dd'),
+      locationId: "store-002"
+    },
+    {
+      id: "prod-0004",
+      name: "Apple MacBook Pro 16\" M3 Pro (36GB RAM, 1TB SSD)",
+      category: "Laptops",
+      sku: "APL-MBP16-M3P-1TB",
+      price: 2899.99,
+      stockLevel: 5,
+      reorderPoint: 8,
+      minStockLevel: 3,
+      maxStockLevel: 15,
+      leadTime: 12,
+      supplier: "Apple Inc.",
+      salesVelocity: 0.8,
+      locationId: "store-001"
+    },
+    {
+      id: "prod-0005",
+      name: "LG C3 65\" OLED 4K Smart TV",
+      category: "TVs",
+      sku: "LG-OLED65C3-4K",
+      price: 1799.99,
+      stockLevel: 3,
+      reorderPoint: 5,
+      minStockLevel: 2,
+      maxStockLevel: 12,
+      leadTime: 14,
+      supplier: "LG Electronics",
+      salesVelocity: 0.6,
+      locationId: "warehouse-main"
+    },
+    {
+      id: "prod-0006",
+      name: "Dyson V15 Detect Absolute Cordless Vacuum",
+      category: "Home Appliances",
+      sku: "DYS-V15-DETECT",
+      price: 749.99,
+      stockLevel: 12,
+      reorderPoint: 10,
+      minStockLevel: 5,
+      maxStockLevel: 25,
+      leadTime: 8,
+      supplier: "Dyson Ltd",
+      salesVelocity: 1.2,
+      locationId: "store-002"
+    },
+    {
+      id: "prod-0007",
+      name: "Nintendo Switch OLED Model",
+      category: "Gaming",
+      sku: "NIN-SWOLED-WHT",
+      price: 349.99,
+      stockLevel: 22,
+      reorderPoint: 15,
+      minStockLevel: 10,
+      maxStockLevel: 40,
+      leadTime: 7,
+      supplier: "Nintendo Co., Ltd.",
+      salesVelocity: 2.1,
+      locationId: "store-001"
+    },
+    {
+      id: "prod-0008",
+      name: "Canon EOS R6 Mark II Mirrorless Camera",
+      category: "Cameras",
+      sku: "CAN-EOSR6M2-BDY",
+      price: 2499.99,
+      stockLevel: 4,
+      reorderPoint: 5,
+      minStockLevel: 2,
+      maxStockLevel: 10,
+      leadTime: 15,
+      supplier: "Canon Inc.",
+      salesVelocity: 0.5,
+      locationId: "store-002"
+    },
+    {
+      id: "prod-0009",
+      name: "Bose QuietComfort Ultra Headphones",
+      category: "Audio",
+      sku: "BOSE-QCU-BLK",
+      price: 429.99,
+      stockLevel: 7,
+      reorderPoint: 10,
+      minStockLevel: 5,
+      maxStockLevel: 25,
+      leadTime: 9,
+      supplier: "Bose Corporation",
+      salesVelocity: 1.3,
+      locationId: "warehouse-main"
+    },
+    {
+      id: "prod-0010",
+      name: "NVIDIA GeForce RTX 4090 Graphics Card",
+      category: "Computer Components",
+      sku: "NV-RTX4090-FE",
+      price: 1599.99,
+      stockLevel: 2,
+      reorderPoint: 5,
+      minStockLevel: 2,
+      maxStockLevel: 15,
+      leadTime: 20,
+      supplier: "NVIDIA Corporation",
+      salesVelocity: 0.7,
+      locationId: "warehouse-main"
+    },
+    {
+      id: "prod-0011",
+      name: "Amazon Echo Show 10 (3rd Gen)",
+      category: "Smart Home",
+      sku: "AMZN-ECHO10-BLK",
+      price: 249.99,
+      stockLevel: 15,
+      reorderPoint: 12,
+      minStockLevel: 8,
+      maxStockLevel: 30,
+      leadTime: 6,
+      supplier: "Amazon.com, Inc.",
+      salesVelocity: 1.8,
+      locationId: "store-001"
+    },
+    {
+      id: "prod-0012",
+      name: "Philips Hue White and Color Ambiance Starter Kit",
+      category: "Smart Home",
+      sku: "PHIL-HUE-SKIT",
+      price: 199.99,
+      stockLevel: 9,
+      reorderPoint: 15,
+      minStockLevel: 10,
+      maxStockLevel: 35,
+      leadTime: 8,
+      supplier: "Signify N.V.",
+      salesVelocity: 1.5,
+      locationId: "store-002"
+    },
+    {
+      id: "prod-0013",
+      name: "Samsung Galaxy Tab S9+ (12.4\", 256GB)",
+      category: "Tablets",
+      sku: "SAM-TABS9P-256",
+      price: 999.99,
+      stockLevel: 6,
+      reorderPoint: 8,
+      minStockLevel: 5,
+      maxStockLevel: 20,
+      leadTime: 10,
+      supplier: "Samsung Electronics",
+      salesVelocity: 1.1,
+      locationId: "warehouse-main"
+    },
+    {
+      id: "prod-0014",
+      name: "Sonos Arc Premium Smart Soundbar",
+      category: "Audio",
+      sku: "SONOS-ARC-BLK",
+      price: 899.99,
+      stockLevel: 4,
+      reorderPoint: 6,
+      minStockLevel: 3,
+      maxStockLevel: 15,
+      leadTime: 12,
+      supplier: "Sonos, Inc.",
+      salesVelocity: 0.8,
+      locationId: "store-001"
+    },
+    {
+      id: "prod-0015",
+      name: "Microsoft Xbox Series X Console",
+      category: "Gaming",
+      sku: "MS-XBOX-SX",
+      price: 499.99,
+      stockLevel: 0,
+      reorderPoint: 10,
+      minStockLevel: 5,
+      maxStockLevel: 25,
+      leadTime: 15,
+      supplier: "Microsoft Corporation",
+      salesVelocity: 1.9,
+      lastReordered: format(subDays(new Date(), 5), 'yyyy-MM-dd'),
+      locationId: "warehouse-main"
+    },
+    {
+      id: "prod-0016",
+      name: "Apple iPad Pro 12.9\" M2 (512GB, Wi-Fi + Cellular)",
+      category: "Tablets",
+      sku: "APL-IPP129-M2-512C",
+      price: 1599.99,
+      stockLevel: 7,
+      reorderPoint: 8,
+      minStockLevel: 4,
+      maxStockLevel: 15,
+      leadTime: 9,
+      supplier: "Apple Inc.",
+      salesVelocity: 0.9,
+      locationId: "store-002"
+    },
+    {
+      id: "prod-0017",
+      name: "Logitech MX Master 3S Wireless Mouse",
+      category: "Computer Accessories",
+      sku: "LOG-MXM3S-GRY",
+      price: 99.99,
+      stockLevel: 25,
+      reorderPoint: 15,
+      minStockLevel: 10,
+      maxStockLevel: 40,
+      leadTime: 7,
+      supplier: "Logitech International S.A.",
+      salesVelocity: 2.2,
+      locationId: "store-001"
+    },
+    {
+      id: "prod-0018",
+      name: "GoPro HERO12 Black",
+      category: "Cameras",
+      sku: "GP-HERO12-BLK",
+      price: 399.99,
+      stockLevel: 11,
+      reorderPoint: 12,
+      minStockLevel: 8,
+      maxStockLevel: 30,
+      leadTime: 8,
+      supplier: "GoPro, Inc.",
+      salesVelocity: 1.4,
+      locationId: "warehouse-main"
+    },
+    {
+      id: "prod-0019",
+      name: "DJI Mavic 3 Pro Drone",
+      category: "Drones",
+      sku: "DJI-MAV3-PRO",
+      price: 2199.99,
+      stockLevel: 3,
+      reorderPoint: 5,
+      minStockLevel: 2,
+      maxStockLevel: 10,
+      leadTime: 18,
+      supplier: "DJI Technology Co., Ltd.",
+      salesVelocity: 0.4,
+      locationId: "store-002"
+    },
+    {
+      id: "prod-0020",
+      name: "Samsung Odyssey Neo G9 49\" Curved Gaming Monitor",
+      category: "Monitors",
+      sku: "SAM-ODYG9-49",
+      price: 1999.99,
+      stockLevel: 2,
+      reorderPoint: 3,
+      minStockLevel: 1,
+      maxStockLevel: 8,
+      leadTime: 14,
+      supplier: "Samsung Electronics",
+      salesVelocity: 0.3,
+      locationId: "warehouse-main"
+    }
+  ];
   
-  return Array.from({ length: count }).map((_, i) => {
-    const id = `prod-${i.toString().padStart(4, '0')}`;
-    const category = categories[Math.floor(Math.random() * categories.length)];
-    const stockLevel = Math.floor(Math.random() * 100);
-    const price = parseFloat((10 + Math.random() * 90).toFixed(2));
-    
-    return {
-      id,
-      name: `${category} Item ${i + 1}`,
-      category,
-      sku: `SKU-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
-      price,
-      stockLevel,
-      reorderPoint: Math.floor(Math.random() * 25),
-      minStockLevel: Math.floor(Math.random() * 10),
-      maxStockLevel: 100 + Math.floor(Math.random() * 50),
-      leadTime: 3 + Math.floor(Math.random() * 14),
-      supplier: suppliers[Math.floor(Math.random() * suppliers.length)],
-      salesVelocity: parseFloat((Math.random() * 5).toFixed(2)),
-      lastReordered: Math.random() > 0.7 ? format(subDays(new Date(), Math.floor(Math.random() * 30)), 'yyyy-MM-dd') : undefined,
-      locationId: locations[Math.floor(Math.random() * locations.length)]
-    };
-  });
+  // Return the predefined list of products
+  return amazonLikeProducts;
 }
 
 export function generateSalesHistory(products: Product[], days = 90): SalesData[] {

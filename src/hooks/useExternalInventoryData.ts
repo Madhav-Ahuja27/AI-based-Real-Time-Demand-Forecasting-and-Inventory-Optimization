@@ -21,24 +21,24 @@ interface ExternalInventoryResponse {
 
 const mockInventoryData: ExternalInventoryItem[] = [
   {
-    Product: "Apple MacBook Air M2 (8GB RAM, 256GB SSD)",
-    Current_Stock: 15,
-    Recommended_Order: 5,
+    Product: "Apple MacBook Air M3 (16GB RAM, 512GB SSD)",
+    Current_Stock: 12,
+    Recommended_Order: 8,
     Status: "In Stock",
-    SKU: "APP-MBA-M2-01",
+    SKU: "APP-MBA-M3-16-512",
     Category: "Laptops",
-    Price: 999.99,
+    Price: 1499.99,
     Supplier: "Apple Inc.",
     Location: "Delhi"
   },
   {
-    Product: "Samsung Galaxy S23 Ultra (12GB RAM, 256GB)",
-    Current_Stock: 8,
+    Product: "Samsung Galaxy S24 Ultra (12GB RAM, 512GB)",
+    Current_Stock: 6,
     Recommended_Order: 10,
     Status: "Low Stock",
-    SKU: "SAM-GS23U-01",
+    SKU: "SAM-GS24U-12-512",
     Category: "Smartphones",
-    Price: 1199.99,
+    Price: 1299.99,
     Supplier: "Samsung Electronics",
     Location: "Chandigarh"
   },
@@ -54,26 +54,81 @@ const mockInventoryData: ExternalInventoryItem[] = [
     Location: "Ludhiana"
   },
   {
-    Product: "HP 15, AMD Ryzen 5 7520U (8GB LPDDR5, 512GB SSD)",
-    Current_Stock: 10,
+    Product: "HP Spectre x360 14 (Intel i7, 16GB RAM, 1TB SSD)",
+    Current_Stock: 8,
     Recommended_Order: 5,
     Status: "In Stock",
-    SKU: "HP-15S-FC0155AU",
+    SKU: "HP-SPX360-14-i7",
     Category: "Laptops",
-    Price: 649.99,
+    Price: 1499.99,
     Supplier: "HP Inc.",
     Location: "Jalandhar"
   },
   {
-    Product: "Apple iPad Pro 12.9-inch (M2, Wi-Fi, 256GB)",
-    Current_Stock: 6,
+    Product: "Apple iPad Pro 12.9-inch (M2, Wi-Fi, 512GB)",
+    Current_Stock: 4,
     Recommended_Order: 8,
     Status: "Low Stock",
-    SKU: "APP-IPP-M2-01",
+    SKU: "APP-IPP-M2-512",
     Category: "Tablets",
-    Price: 1099.99,
+    Price: 1399.99,
     Supplier: "Apple Inc.",
     Location: "Delhi"
+  },
+  {
+    Product: "Bose QuietComfort Ultra Headphones",
+    Current_Stock: 10,
+    Recommended_Order: 6,
+    Status: "In Stock",
+    SKU: "BOSE-QCU-BLK",
+    Category: "Audio",
+    Price: 429.99,
+    Supplier: "Bose Corporation",
+    Location: "Chandigarh"
+  },
+  {
+    Product: "LG C3 65\" OLED 4K Smart TV",
+    Current_Stock: 3,
+    Recommended_Order: 5,
+    Status: "Low Stock",
+    SKU: "LG-OLED65C3-4K",
+    Category: "TVs",
+    Price: 1799.99,
+    Supplier: "LG Electronics",
+    Location: "Delhi"
+  },
+  {
+    Product: "Dyson V15 Detect Absolute Cordless Vacuum",
+    Current_Stock: 0,
+    Recommended_Order: 8,
+    Status: "Out of Stock",
+    SKU: "DYS-V15-DETECT",
+    Category: "Home Appliances",
+    Price: 749.99,
+    Supplier: "Dyson Ltd",
+    Location: "Ludhiana"
+  },
+  {
+    Product: "NVIDIA GeForce RTX 4090 Graphics Card",
+    Current_Stock: 2,
+    Recommended_Order: 5,
+    Status: "Low Stock",
+    SKU: "NV-RTX4090-FE",
+    Category: "Computer Components",
+    Price: 1599.99,
+    Supplier: "NVIDIA Corporation",
+    Location: "Chandigarh"
+  },
+  {
+    Product: "Amazon Echo Show 10 (3rd Gen)",
+    Current_Stock: 15,
+    Recommended_Order: 10,
+    Status: "In Stock",
+    SKU: "AMZN-ECHO10-BLK",
+    Category: "Smart Home",
+    Price: 249.99,
+    Supplier: "Amazon.com, Inc.",
+    Location: "Jalandhar"
   }
 ];
 

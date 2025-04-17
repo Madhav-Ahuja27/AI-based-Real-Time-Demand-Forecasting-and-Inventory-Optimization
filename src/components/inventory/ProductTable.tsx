@@ -6,8 +6,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, ArrowUpDown, Filter, Edit } from "lucide-react";
+import { Search, ArrowUpDown, Filter, Edit, Save, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface ProductTableProps {
   products: Product[];
@@ -18,6 +19,8 @@ export function ProductTable({ products, className }: ProductTableProps) {
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<keyof Product>("name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [editingProduct, setEditingProduct] = useState<string | null>(null);
+  const [editValues, setEditValues] = useState<Partial<Product>>({});
 
   // Filter products by search term
   const filteredProducts = products.filter(
@@ -52,6 +55,41 @@ export function ProductTable({ products, className }: ProductTableProps) {
       setSortBy(column);
       setSortOrder("asc");
     }
+  };
+
+  // Start editing a product
+  const startEditing = (product: Product) => {
+    setEditingProduct(product.id);
+    setEditValues({
+      name: product.name,
+      sku: product.sku,
+      category: product.category,
+      stockLevel: product.stockLevel,
+      price: product.price,
+      minStockLevel: product.minStockLevel,
+      maxStockLevel: product.maxStockLevel,
+      reorderPoint: product.reorderPoint
+    });
+  };
+
+  // Cancel editing
+  const cancelEditing = () => {
+    setEditingProduct(null);
+    setEditValues({});
+  };
+
+  // Save changes
+  const saveChanges = (productId: string) => {
+    // In a real application, you would call an API to update the product
+    // For now, we'll just show a success message
+    toast.success("Product updated successfully!");
+    setEditingProduct(null);
+    setEditValues({});
+  };
+
+  // Handle input change
+  const handleInputChange = (field: keyof Product, value: string | number) => {
+    setEditValues(prev => ({ ...prev, [field]: value }));
   };
 
   // Stock level indicator
@@ -126,29 +164,119 @@ export function ProductTable({ products, className }: ProductTableProps) {
           </TableHeader>
           <TableBody>
             {sortedProducts.length > 0 ? (
-              sortedProducts.map((product) => (
-                <TableRow key={product.id}>
-                  <TableCell>
-                    <div className="font-medium">{product.name}</div>
-                    <div className="text-xs text-muted-foreground">SKU: {product.sku}</div>
-                  </TableCell>
-                  <TableCell>{product.category}</TableCell>
-                  <TableCell>
-                    <div>{product.stockLevel}</div>
-                    <div className="text-xs text-muted-foreground">Min: {product.minStockLevel} | Max: {product.maxStockLevel}</div>
-                  </TableCell>
-                  <TableCell>{getStockLevelIndicator(product)}</TableCell>
-                  <TableCell className="text-right">${product.price.toFixed(2)}</TableCell>
-                  <TableCell className="text-right">
-                    <Button asChild size="sm" variant="ghost">
-                      <Link to={`/inventory-monitoring/${product.id}`}>
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit
-                      </Link>
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
+              sortedProducts.map((product) => {
+                const isEditing = editingProduct === product.id;
+                return (
+                  <TableRow key={product.id}>
+                    <TableCell>
+                      {isEditing ? (
+                        <div className="space-y-2">
+                          <Input
+                            value={editValues.name || ''}
+                            onChange={(e) => handleInputChange('name', e.target.value)}
+                            className="w-full"
+                          />
+                          <Input
+                            value={editValues.sku || ''}
+                            onChange={(e) => handleInputChange('sku', e.target.value)}
+                            className="w-full text-xs"
+                            placeholder="SKU"
+                          />
+                        </div>
+                      ) : (
+                        <>
+                          <div className="font-medium">{product.name}</div>
+                          <div className="text-xs text-muted-foreground">SKU: {product.sku}</div>
+                        </>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {isEditing ? (
+                        <Input
+                          value={editValues.category || ''}
+                          onChange={(e) => handleInputChange('category', e.target.value)}
+                          className="w-full"
+                        />
+                      ) : (
+                        product.category
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {isEditing ? (
+                        <div className="space-y-2">
+                          <Input
+                            type="number"
+                            value={editValues.stockLevel || 0}
+                            onChange={(e) => handleInputChange('stockLevel', Number(e.target.value))}
+                            className="w-20"
+                          />
+                          <div className="flex space-x-2">
+                            <Input
+                              type="number"
+                              value={editValues.minStockLevel || 0}
+                              onChange={(e) => handleInputChange('minStockLevel', Number(e.target.value))}
+                              className="w-16 h-7 text-xs"
+                              placeholder="Min"
+                            />
+                            <Input
+                              type="number"
+                              value={editValues.maxStockLevel || 0}
+                              onChange={(e) => handleInputChange('maxStockLevel', Number(e.target.value))}
+                              className="w-16 h-7 text-xs"
+                              placeholder="Max"
+                            />
+                          </div>
+                          <Input
+                            type="number"
+                            value={editValues.reorderPoint || 0}
+                            onChange={(e) => handleInputChange('reorderPoint', Number(e.target.value))}
+                            className="w-16 h-7 text-xs"
+                            placeholder="Reorder"
+                          />
+                        </div>
+                      ) : (
+                        <>
+                          <div>{product.stockLevel}</div>
+                          <div className="text-xs text-muted-foreground">Min: {product.minStockLevel} | Max: {product.maxStockLevel}</div>
+                        </>
+                      )}
+                    </TableCell>
+                    <TableCell>{getStockLevelIndicator(product)}</TableCell>
+                    <TableCell className="text-right">
+                      {isEditing ? (
+                        <Input
+                          type="number"
+                          value={editValues.price || 0}
+                          onChange={(e) => handleInputChange('price', Number(e.target.value))}
+                          className="w-24"
+                          step="0.01"
+                        />
+                      ) : (
+                        `$${product.price.toFixed(2)}`
+                      )}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {isEditing ? (
+                        <div className="flex space-x-2 justify-end">
+                          <Button onClick={() => saveChanges(product.id)} size="sm" variant="outline">
+                            <Save className="h-4 w-4 mr-1" />
+                            Save
+                          </Button>
+                          <Button onClick={cancelEditing} size="sm" variant="ghost">
+                            <X className="h-4 w-4 mr-1" />
+                            Cancel
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button onClick={() => startEditing(product)} size="sm" variant="ghost">
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             ) : (
               <TableRow>
                 <TableCell colSpan={6} className="h-24 text-center">
