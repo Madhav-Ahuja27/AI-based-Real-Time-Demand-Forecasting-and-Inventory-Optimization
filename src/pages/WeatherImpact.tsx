@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { fetchProducts, fetchProductForecast } from "@/lib/mock-api";
 import { Product, Forecast } from "@/lib/mock-data";
@@ -12,6 +13,7 @@ import { CloudSun, CloudRain, Umbrella, Snowflake, CloudLightning, ArrowUp, Arro
 import { format, parseISO } from "date-fns";
 import { useWeatherForecast, locationCityMap } from "@/hooks/useWeatherData";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 export default function WeatherImpact() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -59,6 +61,11 @@ export default function WeatherImpact() {
       loadForecast();
     }
   }, [selectedProduct]);
+
+  const handleRefresh = () => {
+    refetchWeather();
+    toast.success("Weather data refreshed");
+  };
 
   const combinedData = weatherData.map(weather => {
     const forecast = forecasts.find(f => f.date === weather.date);
@@ -109,21 +116,32 @@ export default function WeatherImpact() {
                 <CardTitle>Weather Forecast</CardTitle>
                 <CardDescription>Upcoming weather conditions and sales impact</CardDescription>
               </div>
-              <Select 
-                value={selectedLocation} 
-                onValueChange={setSelectedLocation}
-              >
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Select location" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(locationCityMap).map(([id, location]) => (
-                    <SelectItem key={id} value={id}>
-                      {location.displayName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2">
+                <Select 
+                  value={selectedLocation} 
+                  onValueChange={setSelectedLocation}
+                >
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Select location" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(locationCityMap).map(([id, location]) => (
+                      <SelectItem key={id} value={id}>
+                        {location.displayName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={handleRefresh} 
+                  disabled={isLoadingWeather}
+                >
+                  <Loader2 className={`h-4 w-4 ${isLoadingWeather ? "animate-spin" : ""}`} />
+                  <span className="sr-only">Refresh</span>
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -194,21 +212,46 @@ export default function WeatherImpact() {
                 <CardTitle>Weather Impact Analysis</CardTitle>
                 <CardDescription>Effects on sales by weather conditions</CardDescription>
               </div>
-              <Select 
-                value={selectedProduct || ""} 
-                onValueChange={setSelectedProduct}
-              >
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Select product" />
-                </SelectTrigger>
-                <SelectContent>
-                  {products.map(product => (
-                    <SelectItem key={product.id} value={product.id}>
-                      {product.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2">
+                <Select 
+                  value={selectedProduct || ""} 
+                  onValueChange={setSelectedProduct}
+                >
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Select product" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {products.map(product => (
+                      <SelectItem key={product.id} value={product.id}>
+                        {product.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  onClick={() => {
+                    if (selectedProduct) {
+                      const loadForecast = async () => {
+                        try {
+                          const forecast = await fetchProductForecast(selectedProduct);
+                          setForecasts(forecast);
+                          toast.success("Product forecast refreshed");
+                        } catch (error) {
+                          console.error("Error loading product forecast:", error);
+                          toast.error("Failed to load forecast data");
+                        }
+                      };
+                      loadForecast();
+                    }
+                  }}
+                  disabled={isLoadingProducts || !selectedProduct}
+                >
+                  <Loader2 className={`h-4 w-4 ${isLoadingProducts ? "animate-spin" : ""}`} />
+                  <span className="sr-only">Refresh</span>
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -272,9 +315,20 @@ export default function WeatherImpact() {
       </div>
       
       <Card>
-        <CardHeader>
-          <CardTitle>Weather-Based Inventory Recommendations</CardTitle>
-          <CardDescription>Suggested actions based on weather forecast</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Weather-Based Inventory Recommendations</CardTitle>
+            <CardDescription>Suggested actions based on weather forecast</CardDescription>
+          </div>
+          <Button 
+            variant="outline"
+            onClick={() => {
+              toast.success("Recommendations have been refreshed");
+            }}
+          >
+            <Loader2 className="h-4 w-4 mr-2" />
+            Refresh Recommendations
+          </Button>
         </CardHeader>
         <CardContent>
           <Table>
@@ -348,7 +402,20 @@ export default function WeatherImpact() {
                       {item.impact}
                     </Badge>
                   </TableCell>
-                  <TableCell>{item.action}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center justify-between">
+                      <span>{item.action}</span>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => {
+                          toast.success(`Action for ${item.condition} applied`);
+                        }}
+                      >
+                        Apply
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

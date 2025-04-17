@@ -7,6 +7,7 @@ import { format, parseISO } from "date-fns";
 import { CloudSun, Cloud, CloudRain, Snowflake, CloudLightning, RefreshCw, Loader2, MapPin } from "lucide-react";
 import { useState } from "react";
 import { locationCityMap } from "@/hooks/useWeatherData";
+import { toast } from "sonner";
 
 interface WeatherForecastProps {
   weatherData: WeatherData[];
@@ -37,6 +38,7 @@ export function WeatherForecast({
     
     setIsRefreshing(true);
     onRefresh();
+    toast.success("Weather data refreshed");
     
     // Reset refreshing state after a short delay
     setTimeout(() => setIsRefreshing(false), 1000);

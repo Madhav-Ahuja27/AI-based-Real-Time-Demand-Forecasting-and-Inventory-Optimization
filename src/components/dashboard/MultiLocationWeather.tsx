@@ -6,6 +6,9 @@ import { WeatherForecast } from "./WeatherForecast";
 import { useWeatherForecast } from "@/hooks/useWeatherData";
 import { locationCityMap } from "@/hooks/useWeatherData";
 import Map from "@/components/inventory/Map";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 
 interface MultiLocationWeatherProps {
   className?: string;
@@ -23,6 +26,7 @@ export function MultiLocationWeather({
   // Get all location IDs
   const locationIds = Object.keys(locationCityMap);
   const [selectedLocation, setSelectedLocation] = useState(locationIds[0]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   // Fetch weather data for the selected location
   const { 
@@ -32,11 +36,33 @@ export function MultiLocationWeather({
     refetch 
   } = useWeatherForecast(selectedLocation);
 
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    refetch();
+    toast.success(`Weather data for ${locationCityMap[selectedLocation].displayName} refreshed`);
+    
+    // Reset refreshing state after a short delay
+    setTimeout(() => setIsRefreshing(false), 1000);
+  };
+
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
+        <div className="flex flex-wrap justify-between items-center">
+          <div>
+            <CardTitle>{title}</CardTitle>
+            <CardDescription>{description}</CardDescription>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
+            Refresh All
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="p-0 pt-2">
         <div className="flex flex-col space-y-4">
@@ -59,6 +85,11 @@ export function MultiLocationWeather({
                     key={id} 
                     value={id}
                     className="flex-grow mb-1"
+                    onClick={() => {
+                      if (id !== selectedLocation) {
+                        setSelectedLocation(id);
+                      }
+                    }}
                   >
                     {locationCityMap[id].displayName}
                   </TabsTrigger>
