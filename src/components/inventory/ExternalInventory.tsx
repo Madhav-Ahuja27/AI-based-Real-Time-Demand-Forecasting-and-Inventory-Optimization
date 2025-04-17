@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { 
   useExternalInventory, 
@@ -910,4 +911,257 @@ export function ExternalInventory() {
                             <TableHead>Prediction</TableHead>
                           </>
                         )}
-                        <TableHead>Actions</TableHead
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredInventory.map(item => {
+                        const isEditing = editingItem?.Id === item.Id;
+                        return (
+                          <TableRow key={item.Id || item.Product}>
+                            {renderBasicInfo(item, isEditing)}
+                            {activeView === "basic" 
+                              ? renderExtendedInfo(item, isEditing)
+                              : renderPredictionInfo(item, isEditing)
+                            }
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                {isEditing ? (
+                                  <>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon"
+                                      onClick={saveChanges}
+                                      disabled={isUpdating}
+                                    >
+                                      {isUpdating ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                      ) : (
+                                        <Save className="h-4 w-4 text-blue-500" />
+                                      )}
+                                    </Button>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon"
+                                      onClick={cancelEditing}
+                                    >
+                                      <X className="h-4 w-4 text-red-500" />
+                                    </Button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon"
+                                      onClick={() => startEditing(item)}
+                                    >
+                                      <Edit className="h-4 w-4" />
+                                    </Button>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon"
+                                      onClick={() => handleDeleteItem(item)}
+                                      disabled={isDeleting}
+                                    >
+                                      {isDeleting && editingItem?.Id === item.Id ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                      ) : (
+                                        <Trash2 className="h-4 w-4 text-red-500" />
+                                      )}
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="low">
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Product</TableHead>
+                        <TableHead>Current Stock</TableHead>
+                        <TableHead>Recommended Order</TableHead>
+                        {activeView === "basic" ? (
+                          <>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Price & Category</TableHead>
+                            <TableHead>Supplier & Location</TableHead>
+                          </>
+                        ) : (
+                          <>
+                            <TableHead>Audience Fit</TableHead>
+                            <TableHead>Confidence & Sentiment</TableHead>
+                            <TableHead>Prediction</TableHead>
+                          </>
+                        )}
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredInventory
+                        .filter(item => item.Status?.toLowerCase() === "low stock")
+                        .map(item => {
+                          const isEditing = editingItem?.Id === item.Id;
+                          return (
+                            <TableRow key={item.Id || item.Product}>
+                              {renderBasicInfo(item, isEditing)}
+                              {activeView === "basic" 
+                                ? renderExtendedInfo(item, isEditing)
+                                : renderPredictionInfo(item, isEditing)
+                              }
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  {isEditing ? (
+                                    <>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon"
+                                        onClick={saveChanges}
+                                        disabled={isUpdating}
+                                      >
+                                        {isUpdating ? (
+                                          <Loader2 className="h-4 w-4 animate-spin" />
+                                        ) : (
+                                          <Save className="h-4 w-4 text-blue-500" />
+                                        )}
+                                      </Button>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon"
+                                        onClick={cancelEditing}
+                                      >
+                                        <X className="h-4 w-4 text-red-500" />
+                                      </Button>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon"
+                                        onClick={() => startEditing(item)}
+                                      >
+                                        <Edit className="h-4 w-4" />
+                                      </Button>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon"
+                                        onClick={() => handleDeleteItem(item)}
+                                        disabled={isDeleting}
+                                      >
+                                        <Trash2 className="h-4 w-4 text-red-500" />
+                                      </Button>
+                                    </>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="out">
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Product</TableHead>
+                        <TableHead>Current Stock</TableHead>
+                        <TableHead>Recommended Order</TableHead>
+                        {activeView === "basic" ? (
+                          <>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Price & Category</TableHead>
+                            <TableHead>Supplier & Location</TableHead>
+                          </>
+                        ) : (
+                          <>
+                            <TableHead>Audience Fit</TableHead>
+                            <TableHead>Confidence & Sentiment</TableHead>
+                            <TableHead>Prediction</TableHead>
+                          </>
+                        )}
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredInventory
+                        .filter(item => item.Status?.toLowerCase() === "out of stock")
+                        .map(item => {
+                          const isEditing = editingItem?.Id === item.Id;
+                          return (
+                            <TableRow key={item.Id || item.Product}>
+                              {renderBasicInfo(item, isEditing)}
+                              {activeView === "basic" 
+                                ? renderExtendedInfo(item, isEditing)
+                                : renderPredictionInfo(item, isEditing)
+                              }
+                              <TableCell>
+                                <div className="flex items-center gap-2">
+                                  {isEditing ? (
+                                    <>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon"
+                                        onClick={saveChanges}
+                                        disabled={isUpdating}
+                                      >
+                                        {isUpdating ? (
+                                          <Loader2 className="h-4 w-4 animate-spin" />
+                                        ) : (
+                                          <Save className="h-4 w-4 text-blue-500" />
+                                        )}
+                                      </Button>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon"
+                                        onClick={cancelEditing}
+                                      >
+                                        <X className="h-4 w-4 text-red-500" />
+                                      </Button>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon"
+                                        onClick={() => startEditing(item)}
+                                      >
+                                        <Edit className="h-4 w-4" />
+                                      </Button>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon"
+                                        onClick={() => handleDeleteItem(item)}
+                                        disabled={isDeleting}
+                                      >
+                                        <Trash2 className="h-4 w-4 text-red-500" />
+                                      </Button>
+                                    </>
+                                  )}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </TabsContent>
+            </>
+          )}
+        </Tabs>
+      </CardContent>
+    </Card>
+  );
+}
