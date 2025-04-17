@@ -96,12 +96,16 @@ export function DetailedForecastChart({ data, className }: DetailedForecastChart
               <XAxis 
                 dataKey="date" 
                 tickFormatter={(dateStr) => format(parseISO(dateStr), "MM/dd")}
+                tick={{ fontSize: 12 }}
+                padding={{ left: 10, right: 10 }}
               />
               <YAxis 
                 yAxisId="left"
                 axisLine={false}
                 tickLine={false}
                 tickFormatter={(value) => value.toFixed(0)}
+                tick={{ fontSize: 12 }}
+                width={40}
               />
               <YAxis 
                 yAxisId="right" 
@@ -110,6 +114,8 @@ export function DetailedForecastChart({ data, className }: DetailedForecastChart
                 tickLine={false}
                 tickFormatter={(value) => chartType === "revenue" ? `$${(value/1000).toFixed(0)}k` : value.toFixed(0)}
                 hide={chartType !== "revenue"}
+                tick={{ fontSize: 12 }}
+                width={60}
               />
               <Tooltip content={renderTooltip} />
               <Legend />

@@ -68,7 +68,7 @@ interface ReorderRecommendation {
   recommendedQuantity: number;
   reasoning: {
     currentStock: number;
-    predictedStock: number; // Added predicted stock from forecast
+    predictedStock: number; // Required field for the type
     avgDailyDemand: number;
     leadTime: number;
     safetyStock: number;
@@ -169,10 +169,24 @@ export default function ReorderingSystem() {
         // Enhance recommendation with predicted stock from our forecast data if available
         const predictedStock = forecastDataMap.get(p.name);
         if (predictedStock !== undefined) {
-          rec.reasoning.predictedStock = predictedStock;
+          // Add predictedStock to the recommendation's reasoning
+          return {
+            ...rec,
+            reasoning: {
+              ...rec.reasoning,
+              predictedStock: predictedStock
+            }
+          };
         }
         
-        return rec;
+        // If no predicted stock is available, provide a default value
+        return {
+          ...rec,
+          reasoning: {
+            ...rec.reasoning,
+            predictedStock: rec.reasoning.currentStock * 0.9 // Default to 90% of current stock if no prediction
+          }
+        };
       });
       
       const recommendationResults = await Promise.all(recommendationPromises);
@@ -202,12 +216,18 @@ export default function ReorderingSystem() {
           const product = products.find(p => p.id === selectedProduct);
           if (product) {
             const predictedStock = forecastDataMap.get(product.name);
-            if (predictedStock !== undefined) {
-              recommendation.reasoning.predictedStock = predictedStock;
-            }
+            const updatedRecommendation = {
+              ...recommendation,
+              reasoning: {
+                ...recommendation.reasoning,
+                predictedStock: predictedStock !== undefined 
+                  ? predictedStock 
+                  : recommendation.reasoning.currentStock * 0.9 // Default if no prediction
+              }
+            };
             
-            setReorderDetails(recommendation);
-            setOrderQuantity(recommendation.recommendedQuantity);
+            setReorderDetails(updatedRecommendation);
+            setOrderQuantity(updatedRecommendation.recommendedQuantity);
             setSelectedSupplier(product.supplier || "");
           }
           
@@ -251,7 +271,7 @@ export default function ReorderingSystem() {
           `"${product.name}"`,
           product.sku,
           product.stockLevel,
-          predictedStock,
+          typeof predictedStock === 'number' ? predictedStock.toFixed(2) : predictedStock,
           rec ? rec.recommendedQuantity : 0,
           product.stockLevel <= product.minStockLevel ? "Critical" : "Reorder Soon"
         ].join(",");
@@ -447,7 +467,7 @@ export default function ReorderingSystem() {
                     ) : urgentProducts.length > 0 ? (
                       urgentProducts.map((product) => {
                         const rec = recommendations[product.id];
-                        const predictedStock = rec?.reasoning.predictedStock || forecastDataMap.get(product.name);
+                        const predictedStock = rec?.reasoning.predictedStock;
                         
                         return (
                           <TableRow key={product.id}>
@@ -520,7 +540,7 @@ export default function ReorderingSystem() {
                     ) : recommendedProducts.length > 0 ? (
                       recommendedProducts.map((product) => {
                         const rec = recommendations[product.id];
-                        const predictedStock = rec?.reasoning.predictedStock || forecastDataMap.get(product.name);
+                        const predictedStock = rec?.reasoning.predictedStock;
                         
                         return (
                           <TableRow key={product.id}>
