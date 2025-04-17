@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { fetchProductForecast, getRecommendedReorderAmount, placeOrder } from "@/lib/mock-api";
 import { useExternalInventoryForReordering } from "@/hooks/useExternalInventoryData";
@@ -151,8 +152,14 @@ export default function ReorderingSystem() {
 
   useEffect(() => {
     if (externalProducts.length > 0) {
-      setProducts(externalProducts as Product[]);
-      loadRecommendationsData(externalProducts as Product[]);
+      // Add the required salesVelocity property and cast to Product[]
+      const productsWithSalesVelocity = externalProducts.map(product => ({
+        ...product,
+        salesVelocity: 10, // Default value for salesVelocity
+      })) as unknown as Product[];
+      
+      setProducts(productsWithSalesVelocity);
+      loadRecommendationsData(productsWithSalesVelocity);
     }
   }, [externalProducts]);
 
@@ -331,10 +338,11 @@ export default function ReorderingSystem() {
         toast.success(`Order placed for ${orderQuantity} units of ${product?.name}`);
         
         // Refresh the data to show updated inventory levels
-        await loadData();
-        
-        // Close the order form
-        setSelectedProduct(null);
+        setIsRefreshing(true);
+        refetchExternal().then(() => {
+          setIsRefreshing(false);
+          setSelectedProduct(null);
+        });
       } else {
         toast.error("Failed to place order. Please try again.");
       }

@@ -348,7 +348,8 @@ export function useExternalInventoryForReordering() {
     confidence: item.Confidence,
     market_sentiment: item.Market_Sentiment,
     prediction: item.Prediction,
-    recommended_order: item.Recommended_Order
+    recommended_order: item.Recommended_Order,
+    salesVelocity: 10 // Adding the missing salesVelocity property
   }));
   
   return {
