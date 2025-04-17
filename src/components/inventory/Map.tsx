@@ -2,7 +2,6 @@
 import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { MapPin } from 'lucide-react';
 
 interface MapProps {
   className?: string;
@@ -13,8 +12,8 @@ const Map: React.FC<MapProps> = ({ className }) => {
   const map = useRef<mapboxgl.Map | null>(null);
   const marker = useRef<mapboxgl.Marker | null>(null);
 
-  // Chandigarh, India coordinates
-  const chandigarhCoordinates = [76.7794, 30.7333]; // [longitude, latitude]
+  // Chandigarh, India coordinates - properly typed as [longitude, latitude]
+  const chandigarhCoordinates: [number, number] = [76.7794, 30.7333];
 
   useEffect(() => {
     if (!mapContainer.current) return;
