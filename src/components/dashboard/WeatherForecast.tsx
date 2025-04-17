@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
-import { CloudSun, Cloud, CloudRain, Snowflake, CloudLightning, RefreshCw, Loader2 } from "lucide-react";
+import { CloudSun, Cloud, CloudRain, Snowflake, CloudLightning, RefreshCw, Loader2, MapPin } from "lucide-react";
 import { useState } from "react";
+import { locationCityMap } from "@/hooks/useWeatherData";
 
 interface WeatherForecastProps {
   weatherData: WeatherData[];
@@ -13,6 +14,8 @@ interface WeatherForecastProps {
   isLoading?: boolean;
   isError?: boolean;
   onRefresh?: () => void;
+  locationId?: string;
+  showLocation?: boolean;
 }
 
 export function WeatherForecast({ 
@@ -20,9 +23,14 @@ export function WeatherForecast({
   className, 
   isLoading = false, 
   isError = false,
-  onRefresh 
+  onRefresh,
+  locationId = 'store-001',
+  showLocation = false
 }: WeatherForecastProps) {
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const locationInfo = locationId ? locationCityMap[locationId] : undefined;
+  const locationName = locationInfo ? locationInfo.displayName : 'Unknown Location';
 
   const handleRefresh = () => {
     if (!onRefresh) return;
@@ -38,7 +46,15 @@ export function WeatherForecast({
     return (
       <Card className={className}>
         <CardHeader className="bg-muted/50">
-          <CardTitle>Weather Forecast</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Weather Forecast</CardTitle>
+            {showLocation && locationInfo && (
+              <div className="flex items-center text-sm text-muted-foreground">
+                <MapPin className="h-4 w-4 mr-1" />
+                {locationName}
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="flex items-center justify-center py-16">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -53,17 +69,25 @@ export function WeatherForecast({
         <CardHeader className="bg-muted/50">
           <div className="flex items-center justify-between">
             <CardTitle>Weather Forecast</CardTitle>
-            {onRefresh && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleRefresh}
-                disabled={isRefreshing}
-              >
-                <RefreshCw className={cn("h-4 w-4 mr-1", isRefreshing && "animate-spin")} />
-                Retry
-              </Button>
-            )}
+            <div className="flex items-center space-x-4">
+              {showLocation && locationInfo && (
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <MapPin className="h-4 w-4 mr-1" />
+                  {locationName}
+                </div>
+              )}
+              {onRefresh && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleRefresh}
+                  disabled={isRefreshing}
+                >
+                  <RefreshCw className={cn("h-4 w-4 mr-1", isRefreshing && "animate-spin")} />
+                  Retry
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent className="text-center py-8 text-muted-foreground">
@@ -114,17 +138,25 @@ export function WeatherForecast({
       <CardHeader className="bg-muted/50">
         <div className="flex items-center justify-between">
           <CardTitle>Weather Forecast</CardTitle>
-          {onRefresh && (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-            >
-              <RefreshCw className={cn("h-4 w-4 mr-1", isRefreshing && "animate-spin")} />
-              Refresh
-            </Button>
-          )}
+          <div className="flex items-center space-x-4">
+            {showLocation && locationInfo && (
+              <div className="flex items-center text-sm text-muted-foreground">
+                <MapPin className="h-4 w-4 mr-1" />
+                {locationName}
+              </div>
+            )}
+            {onRefresh && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+              >
+                <RefreshCw className={cn("h-4 w-4 mr-1", isRefreshing && "animate-spin")} />
+                Refresh
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="p-0">

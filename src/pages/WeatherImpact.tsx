@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LineChart } from "@/components/charts/LineChart";
 import { WeatherForecast } from "@/components/dashboard/WeatherForecast";
+import { MultiLocationWeather } from "@/components/dashboard/MultiLocationWeather";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CloudSun, CloudRain, Umbrella, Snowflake, CloudLightning, ArrowUp, ArrowDown, Loader2 } from "lucide-react";

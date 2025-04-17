@@ -30,7 +30,6 @@ const mockWeatherData = (locationId: string): WeatherData[] => {
     else impact = (Math.random() * 0.4) - 0.2;  // Mixed impact for cloudy days
     
     return {
-      id: `weather-${i}`,
       date: date.toISOString().split('T')[0],
       locationId,
       condition,
@@ -96,10 +95,13 @@ const calculateSalesImpact = (condition: WeatherData['condition'], temp: number)
 };
 
 // Location IDs to city mappings for the API
-const locationCityMap: Record<string, { city: string, country: string }> = {
-  'store-001': { city: 'New Delhi', country: 'IN' },
-  'store-002': { city: 'Mumbai', country: 'IN' },
-  'warehouse-main': { city: 'Chandigarh', country: 'IN' }
+export const locationCityMap: Record<string, { city: string, country: string, displayName: string }> = {
+  'store-001': { city: 'New Delhi', country: 'IN', displayName: 'Delhi Store' },
+  'store-002': { city: 'Mumbai', country: 'IN', displayName: 'Mumbai Store' },
+  'store-003': { city: 'Chandigarh', country: 'IN', displayName: 'Chandigarh Store' },
+  'store-004': { city: 'Ludhiana', country: 'IN', displayName: 'Ludhiana Store' },
+  'store-005': { city: 'Jalandhar', country: 'IN', displayName: 'Jalandhar Store' },
+  'warehouse-main': { city: 'Chandigarh', country: 'IN', displayName: 'Main Warehouse' }
 };
 
 // API key for OpenWeatherMap - using a free public key for demo purposes
@@ -137,7 +139,6 @@ export const useRealWeatherData = (locationId: string = 'store-001') => {
             const temperature = item.main.temp;
             
             dailyForecasts.set(date, {
-              id: `weather-${date}`,
               date,
               locationId,
               condition,
