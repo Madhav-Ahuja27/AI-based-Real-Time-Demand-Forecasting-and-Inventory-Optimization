@@ -1,6 +1,6 @@
-
 import { useEffect, useState } from "react";
-import { fetchProducts, fetchProductForecast, getRecommendedReorderAmount, placeOrder } from "@/lib/mock-api";
+import { fetchProductForecast, getRecommendedReorderAmount, placeOrder } from "@/lib/mock-api";
+import { useExternalInventoryForReordering } from "@/hooks/useExternalInventoryData";
 import { Product } from "@/lib/mock-data";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, CheckCircle2, RefreshCw, Search, FileDown, Settings, Loader2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, RefreshCw, Search, FileDown, Settings, Loader2, ThumbsUp, ThumbsDown, HelpCircle, TrendingUp, TrendingDown, Shuffle } from "lucide-react";
 import { toast } from "sonner";
 
 // Import for the detailed forecast data
@@ -134,6 +134,7 @@ fullForecastData.forEach(item => {
 });
 
 export default function ReorderingSystem() {
+  const { data: externalProducts = [], isLoading: isLoadingExternal, isError: isErrorExternal, error: externalError, refetch: refetchExternal, isFetching: isFetchingExternal } = useExternalInventoryForReordering();
   const [products, setProducts] = useState<Product[]>([]);
   const [recommendations, setRecommendations] = useState<Record<string, ReorderRecommendation>>({});
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
@@ -149,87 +150,97 @@ export default function ReorderingSystem() {
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (externalProducts.length > 0) {
+      setProducts(externalProducts as Product[]);
+      loadRecommendationsData(externalProducts as Product[]);
+    }
+  }, [externalProducts]);
 
-  const loadData = async () => {
+  const loadRecommendationsData = async (productsData: Product[]) => {
     try {
       setIsLoading(true);
-      const productsData = await fetchProducts();
-      setProducts(productsData);
       
       // Get recommendations for products below or near reorder point
       const productsToCheck = productsData.filter(
         p => p.stockLevel <= p.reorderPoint * 1.2
       );
       
-      const recommendationPromises = productsToCheck.map(async p => {
-        const rec = await getRecommendedReorderAmount(p.id);
+      // For each product that needs checking, create a recommendation
+      const recommendationMap: Record<string, ReorderRecommendation> = {};
+      
+      // Use the external data's "recommended_order" field directly or calculate it
+      for (const product of productsToCheck) {
+        const predictedStock = forecastDataMap.get(product.name);
+        const recommendedQuantity = (product as any).recommended_order || 
+          Math.max(0, Math.round(product.reorderPoint - product.stockLevel + 10));
         
-        // Enhance recommendation with predicted stock from our forecast data if available
-        const predictedStock = forecastDataMap.get(p.name);
-        if (predictedStock !== undefined) {
-          // Add predictedStock to the recommendation's reasoning
-          return {
-            ...rec,
-            reasoning: {
-              ...rec.reasoning,
-              predictedStock: predictedStock
-            }
-          };
-        }
-        
-        // If no predicted stock is available, provide a default value
-        return {
-          ...rec,
+        recommendationMap[product.id] = {
+          productId: product.id,
+          recommendedQuantity,
           reasoning: {
-            ...rec.reasoning,
-            predictedStock: rec.reasoning.currentStock * 0.9 // Default to 90% of current stock if no prediction
+            currentStock: product.stockLevel,
+            predictedStock: predictedStock !== undefined ? predictedStock : product.stockLevel * 0.9,
+            avgDailyDemand: product.stockLevel * 0.1,
+            leadTime: product.leadTime || 5,
+            safetyStock: product.minStockLevel,
+            weatherImpact: Math.random() * 5,
+            socialImpact: Math.random() * 5
           }
         };
-      });
+      }
       
-      const recommendationResults = await Promise.all(recommendationPromises);
-      const recommendationsMap: Record<string, ReorderRecommendation> = {};
-      
-      recommendationResults.forEach(rec => {
-        recommendationsMap[rec.productId] = rec;
-      });
-      
-      setRecommendations(recommendationsMap);
+      setRecommendations(recommendationMap);
+      setIsLoading(false);
+      setIsRefreshing(false);
     } catch (error) {
       console.error("Error loading reordering data:", error);
       toast.error("Failed to load reordering data");
-    } finally {
       setIsLoading(false);
       setIsRefreshing(false);
     }
+  };
+
+  // Handle refreshing data
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    refetchExternal().then(() => {
+      toast.success("Reordering data refreshed");
+    });
   };
 
   useEffect(() => {
     if (selectedProduct) {
       const loadRecommendation = async () => {
         try {
-          const recommendation = await getRecommendedReorderAmount(selectedProduct);
-          
-          // Add predicted stock from forecast
+          // Find the selected product
           const product = products.find(p => p.id === selectedProduct);
-          if (product) {
+          if (!product) return;
+          
+          // Get or create recommendation
+          let recommendation = recommendations[selectedProduct];
+          if (!recommendation) {
             const predictedStock = forecastDataMap.get(product.name);
-            const updatedRecommendation = {
-              ...recommendation,
+            const recommendedQuantity = (product as any).recommended_order || 
+              Math.max(0, Math.round(product.reorderPoint - product.stockLevel + 10));
+            
+            recommendation = {
+              productId: product.id,
+              recommendedQuantity,
               reasoning: {
-                ...recommendation.reasoning,
-                predictedStock: predictedStock !== undefined 
-                  ? predictedStock 
-                  : recommendation.reasoning.currentStock * 0.9 // Default if no prediction
+                currentStock: product.stockLevel,
+                predictedStock: predictedStock !== undefined ? predictedStock : product.stockLevel * 0.9,
+                avgDailyDemand: product.stockLevel * 0.1,
+                leadTime: product.leadTime || 5,
+                safetyStock: product.minStockLevel,
+                weatherImpact: Math.random() * 5,
+                socialImpact: Math.random() * 5
               }
             };
-            
-            setReorderDetails(updatedRecommendation);
-            setOrderQuantity(updatedRecommendation.recommendedQuantity);
-            setSelectedSupplier(product.supplier || "");
           }
+          
+          setReorderDetails(recommendation);
+          setOrderQuantity(recommendation.recommendedQuantity);
+          setSelectedSupplier(product.supplier || "");
           
           // Set delivery date to 7 days from now by default
           const date = new Date();
@@ -249,15 +260,9 @@ export default function ReorderingSystem() {
       setDeliveryDate("");
       setOrderNotes("");
     }
-  }, [selectedProduct, products]);
+  }, [selectedProduct, products, recommendations]);
 
-  const handleRefresh = () => {
-    setIsRefreshing(true);
-    loadData();
-    toast.success("Reordering data refreshed");
-  };
-
-  const handleExport = () => {
+  const exportToCSV = () => {
     const headers = [
       "Product", "SKU", "Current Stock", "Predicted Stock", "Recommended Order", "Status"
     ].join(",");
@@ -341,6 +346,73 @@ export default function ReorderingSystem() {
     }
   };
 
+  // Get audience fit badge for market analysis
+  const getAudienceFitBadge = (audienceFit: string | null | undefined) => {
+    if (!audienceFit) return (
+      <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-300">
+        <HelpCircle className="w-3 h-3 mr-1" /> Unknown
+      </Badge>
+    );
+
+    switch (audienceFit.toLowerCase()) {
+      case "high":
+        return (
+          <Badge variant="outline" className="bg-emerald-100 text-emerald-800 border-emerald-300">
+            <ThumbsUp className="w-3 h-3 mr-1" /> High
+          </Badge>
+        );
+      case "medium":
+        return (
+          <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300">
+            <Shuffle className="w-3 h-3 mr-1" /> Medium
+          </Badge>
+        );
+      case "low":
+        return (
+          <Badge variant="outline" className="bg-rose-100 text-rose-800 border-rose-300">
+            <ThumbsDown className="w-3 h-3 mr-1" /> Low
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant="secondary">{audienceFit}</Badge>
+        );
+    }
+  };
+  
+  const getMarketSentimentBadge = (sentiment: string | null | undefined) => {
+    if (!sentiment) return (
+      <Badge variant="outline" className="bg-gray-100 text-gray-800 border-gray-300">
+        <HelpCircle className="w-3 h-3 mr-1" /> Unknown
+      </Badge>
+    );
+
+    switch (sentiment.toLowerCase()) {
+      case "positive":
+        return (
+          <Badge variant="outline" className="bg-emerald-100 text-emerald-800 border-emerald-300">
+            <TrendingUp className="w-3 h-3 mr-1" /> Positive
+          </Badge>
+        );
+      case "mixed":
+        return (
+          <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-300">
+            <Shuffle className="w-3 h-3 mr-1" /> Mixed
+          </Badge>
+        );
+      case "negative":
+        return (
+          <Badge variant="outline" className="bg-rose-100 text-rose-800 border-rose-300">
+            <TrendingDown className="w-3 h-3 mr-1" /> Negative
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant="secondary">{sentiment}</Badge>
+        );
+    }
+  };
+
   // Filter products based on search query
   const filteredProducts = products.filter(product =>
     searchQuery === "" ||
@@ -411,9 +483,9 @@ export default function ReorderingSystem() {
                   size="sm" 
                   className="flex items-center gap-1"
                   onClick={handleRefresh}
-                  disabled={isRefreshing}
+                  disabled={isRefreshing || isFetchingExternal}
                 >
-                  <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+                  <RefreshCw className={`h-4 w-4 ${isRefreshing || isFetchingExternal ? "animate-spin" : ""}`} />
                   Refresh
                 </Button>
                 
@@ -433,7 +505,7 @@ export default function ReorderingSystem() {
                   variant="outline"
                   size="sm"
                   className="flex items-center gap-1"
-                  onClick={handleExport}
+                  onClick={exportToCSV}
                 >
                   <FileDown className="h-4 w-4" />
                   Export
@@ -450,14 +522,15 @@ export default function ReorderingSystem() {
                       <TableHead>Current Stock</TableHead>
                       <TableHead>Predicted Stock</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Market Analysis</TableHead>
                       <TableHead>Recommended Order</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {isLoading ? (
+                    {isLoading || isLoadingExternal ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="h-24">
+                        <TableCell colSpan={7} className="h-24">
                           <div className="flex justify-center items-center">
                             <RefreshCw className="h-5 w-5 animate-spin mr-2" />
                             Loading reorder data...
@@ -491,6 +564,14 @@ export default function ReorderingSystem() {
                               </Badge>
                             </TableCell>
                             <TableCell>
+                              <div className="flex flex-col space-y-1">
+                                {getAudienceFitBadge((product as any).audience_fit)}
+                                <div className="text-xs text-muted-foreground">
+                                  {(product as any).prediction || "No prediction"}
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
                               <div className="font-medium">{rec.recommendedQuantity} units</div>
                               <div className="text-xs text-muted-foreground">{product.leadTime} days lead time</div>
                             </TableCell>
@@ -504,7 +585,7 @@ export default function ReorderingSystem() {
                       })
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={6} className="h-24 text-center">
+                        <TableCell colSpan={7} className="h-24 text-center">
                           No urgent reorders needed.
                         </TableCell>
                       </TableRow>
@@ -523,14 +604,15 @@ export default function ReorderingSystem() {
                       <TableHead>Current Stock</TableHead>
                       <TableHead>Predicted Stock</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Market Analysis</TableHead>
                       <TableHead>Recommended Order</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {isLoading ? (
+                    {isLoading || isLoadingExternal ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="h-24">
+                        <TableCell colSpan={7} className="h-24">
                           <div className="flex justify-center items-center">
                             <RefreshCw className="h-5 w-5 animate-spin mr-2" />
                             Loading reorder data...
@@ -564,6 +646,14 @@ export default function ReorderingSystem() {
                               </Badge>
                             </TableCell>
                             <TableCell>
+                              <div className="flex flex-col space-y-1">
+                                {getAudienceFitBadge((product as any).audience_fit)}
+                                <div className="text-xs text-muted-foreground">
+                                  {(product as any).prediction || "No prediction"}
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
                               <div className="font-medium">{rec.recommendedQuantity} units</div>
                               <div className="text-xs text-muted-foreground">{product.leadTime} days lead time</div>
                             </TableCell>
@@ -577,7 +667,7 @@ export default function ReorderingSystem() {
                       })
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={6} className="h-24 text-center">
+                        <TableCell colSpan={7} className="h-24 text-center">
                           No recommended reorders at this time.
                         </TableCell>
                       </TableRow>
@@ -596,14 +686,15 @@ export default function ReorderingSystem() {
                       <TableHead>Current Stock</TableHead>
                       <TableHead>Predicted Stock</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Market Analysis</TableHead>
                       <TableHead>Reorder Point</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {isLoading ? (
+                    {isLoading || isLoadingExternal ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="h-24">
+                        <TableCell colSpan={7} className="h-24">
                           <div className="flex justify-center items-center">
                             <RefreshCw className="h-5 w-5 animate-spin mr-2" />
                             Loading inventory data...
@@ -636,6 +727,14 @@ export default function ReorderingSystem() {
                               </Badge>
                             </TableCell>
                             <TableCell>
+                              <div className="flex flex-col space-y-1">
+                                {getAudienceFitBadge((product as any).audience_fit)}
+                                <div className="text-xs text-muted-foreground">
+                                  {(product as any).prediction || "No prediction"}
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
                               <div className="font-medium">{product.reorderPoint} units</div>
                               <div className="text-xs text-muted-foreground">{product.leadTime} days lead time</div>
                             </TableCell>
@@ -649,7 +748,7 @@ export default function ReorderingSystem() {
                       })
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={6} className="h-24 text-center">
+                        <TableCell colSpan={7} className="h-24 text-center">
                           No products with optimal stock levels.
                         </TableCell>
                       </TableRow>

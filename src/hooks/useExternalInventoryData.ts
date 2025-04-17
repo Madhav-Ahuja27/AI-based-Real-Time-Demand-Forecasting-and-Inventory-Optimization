@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export interface ExternalInventoryItem {
@@ -326,4 +325,38 @@ export function useAddExternalInventory() {
       queryClient.invalidateQueries({ queryKey: ['external-inventory'] });
     },
   });
+}
+
+export function useExternalInventoryForReordering() {
+  const { data: inventory = [], isLoading, isError, error, refetch, isFetching } = useExternalInventory();
+  
+  // Transform external inventory to format needed by reordering system
+  const transformedData = inventory.map(item => ({
+    id: item.Id || '',
+    name: item.Product,
+    sku: item.SKU || `SKU-${item.Product.substring(0, 5)}`,
+    category: item.Category || 'Electronics',
+    stockLevel: item.Current_Stock,
+    price: item.Price || 0,
+    minStockLevel: Math.floor(item.Current_Stock * 0.2) || 0,
+    maxStockLevel: item.Current_Stock * 2 || 30,
+    reorderPoint: Math.floor(item.Current_Stock * 0.5) || 5,
+    supplier: item.Supplier || 'Default Supplier',
+    leadTime: 5, // Default lead time
+    locationId: item.Location || 'Default',
+    audience_fit: item.Audience_Fit,
+    confidence: item.Confidence,
+    market_sentiment: item.Market_Sentiment,
+    prediction: item.Prediction,
+    recommended_order: item.Recommended_Order
+  }));
+  
+  return {
+    data: transformedData,
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isFetching
+  };
 }
