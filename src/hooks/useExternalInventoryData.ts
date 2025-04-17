@@ -11,6 +11,8 @@ export interface ExternalInventoryItem {
   Price?: number;
   Supplier?: string;
   Location?: string;
+  // Adding a unique identifier
+  Id?: string;
 }
 
 interface ExternalInventoryResponse {
@@ -21,17 +23,19 @@ interface ExternalInventoryResponse {
 
 const mockInventoryData: ExternalInventoryItem[] = [
   {
-    Product: "Apple MacBook Air M3 (16GB RAM, 512GB SSD)",
+    Id: "1",
+    Product: "Apple MacBook Pro M3 Pro (14-inch, 18GB RAM, 512GB SSD)",
     Current_Stock: 12,
     Recommended_Order: 8,
     Status: "In Stock",
-    SKU: "APP-MBA-M3-16-512",
+    SKU: "APP-MBP-M3P-512",
     Category: "Laptops",
-    Price: 1499.99,
+    Price: 1999.99,
     Supplier: "Apple Inc.",
     Location: "Delhi"
   },
   {
+    Id: "2",
     Product: "Samsung Galaxy S24 Ultra (12GB RAM, 512GB)",
     Current_Stock: 6,
     Recommended_Order: 10,
@@ -43,6 +47,7 @@ const mockInventoryData: ExternalInventoryItem[] = [
     Location: "Chandigarh"
   },
   {
+    Id: "3",
     Product: "Sony WH-1000XM5 Wireless Noise Cancelling Headphones",
     Current_Stock: 0,
     Recommended_Order: 15,
@@ -54,17 +59,19 @@ const mockInventoryData: ExternalInventoryItem[] = [
     Location: "Ludhiana"
   },
   {
-    Product: "HP Spectre x360 14 (Intel i7, 16GB RAM, 1TB SSD)",
+    Id: "4",
+    Product: "ASUS ROG Strix G16 (2024) Gaming Laptop, Intel i9-14900H, RTX 4070",
     Current_Stock: 8,
     Recommended_Order: 5,
     Status: "In Stock",
-    SKU: "HP-SPX360-14-i7",
-    Category: "Laptops",
-    Price: 1499.99,
-    Supplier: "HP Inc.",
+    SKU: "ASUS-ROG-G16-4070",
+    Category: "Gaming Laptops",
+    Price: 1799.99,
+    Supplier: "Asus Inc.",
     Location: "Jalandhar"
   },
   {
+    Id: "5",
     Product: "Apple iPad Pro 12.9-inch (M2, Wi-Fi, 512GB)",
     Current_Stock: 4,
     Recommended_Order: 8,
@@ -76,6 +83,7 @@ const mockInventoryData: ExternalInventoryItem[] = [
     Location: "Delhi"
   },
   {
+    Id: "6",
     Product: "Bose QuietComfort Ultra Headphones",
     Current_Stock: 10,
     Recommended_Order: 6,
@@ -87,17 +95,19 @@ const mockInventoryData: ExternalInventoryItem[] = [
     Location: "Chandigarh"
   },
   {
-    Product: "LG C3 65\" OLED 4K Smart TV",
+    Id: "7",
+    Product: "Sony Bravia XR A80L 65-inch OLED 4K TV",
     Current_Stock: 3,
     Recommended_Order: 5,
     Status: "Low Stock",
-    SKU: "LG-OLED65C3-4K",
+    SKU: "SNY-BRAVIA-A80L-65",
     Category: "TVs",
-    Price: 1799.99,
-    Supplier: "LG Electronics",
+    Price: 2499.99,
+    Supplier: "Sony Corporation",
     Location: "Delhi"
   },
   {
+    Id: "8",
     Product: "Dyson V15 Detect Absolute Cordless Vacuum",
     Current_Stock: 0,
     Recommended_Order: 8,
@@ -109,17 +119,19 @@ const mockInventoryData: ExternalInventoryItem[] = [
     Location: "Ludhiana"
   },
   {
-    Product: "NVIDIA GeForce RTX 4090 Graphics Card",
+    Id: "9",
+    Product: "NVIDIA GeForce RTX 4090 24GB GDDR6X Graphics Card",
     Current_Stock: 2,
     Recommended_Order: 5,
     Status: "Low Stock",
-    SKU: "NV-RTX4090-FE",
+    SKU: "NV-RTX4090-24G",
     Category: "Computer Components",
     Price: 1599.99,
     Supplier: "NVIDIA Corporation",
     Location: "Chandigarh"
   },
   {
+    Id: "10",
     Product: "Amazon Echo Show 10 (3rd Gen)",
     Current_Stock: 15,
     Recommended_Order: 10,
@@ -129,8 +141,71 @@ const mockInventoryData: ExternalInventoryItem[] = [
     Price: 249.99,
     Supplier: "Amazon.com, Inc.",
     Location: "Jalandhar"
+  },
+  {
+    Id: "11",
+    Product: "Canon EOS R5 Full-Frame Mirrorless Camera",
+    Current_Stock: 5,
+    Recommended_Order: 3,
+    Status: "In Stock",
+    SKU: "CAN-EOS-R5",
+    Category: "Cameras",
+    Price: 3899.99,
+    Supplier: "Canon Inc.",
+    Location: "Delhi"
+  },
+  {
+    Id: "12",
+    Product: "DJI Air 3 Drone Fly More Combo",
+    Current_Stock: 2,
+    Recommended_Order: 6,
+    Status: "Low Stock",
+    SKU: "DJI-AIR3-FMC",
+    Category: "Drones",
+    Price: 1199.99,
+    Supplier: "DJI Technology",
+    Location: "Chandigarh"
+  },
+  {
+    Id: "13",
+    Product: "LG C3 65\" OLED 4K Smart TV",
+    Current_Stock: 0,
+    Recommended_Order: 7,
+    Status: "Out of Stock",
+    SKU: "LG-OLED65C3-4K",
+    Category: "TVs",
+    Price: 1899.99,
+    Supplier: "LG Electronics",
+    Location: "Jalandhar"
+  },
+  {
+    Id: "14",
+    Product: "Apple AirPods Pro (2nd Generation)",
+    Current_Stock: 22,
+    Recommended_Order: 15,
+    Status: "In Stock",
+    SKU: "APP-APP-2",
+    Category: "Audio",
+    Price: 249.99,
+    Supplier: "Apple Inc.",
+    Location: "Ludhiana"
+  },
+  {
+    Id: "15",
+    Product: "Dell XPS 15 (Intel i9, 32GB RAM, 1TB SSD, RTX 4070)",
+    Current_Stock: 3,
+    Recommended_Order: 5,
+    Status: "Low Stock",
+    SKU: "DELL-XPS15-i9-32",
+    Category: "Laptops",
+    Price: 2499.99,
+    Supplier: "Dell Inc.",
+    Location: "Delhi"
   }
 ];
+
+// In-memory inventory data cache - in a real app, this would be on a server
+let inventoryCache = [...mockInventoryData];
 
 const fetchExternalInventory = async (): Promise<ExternalInventoryItem[]> => {
   try {
@@ -139,7 +214,7 @@ const fetchExternalInventory = async (): Promise<ExternalInventoryItem[]> => {
     
     if (!response.ok) {
       console.warn("API request failed, falling back to mock data");
-      return mockInventoryData;
+      return inventoryCache;
     }
     
     const data: ExternalInventoryResponse = await response.json();
@@ -147,32 +222,87 @@ const fetchExternalInventory = async (): Promise<ExternalInventoryItem[]> => {
     // If the API returns empty or limited data, enhance it with our mock data
     if (!data.inventory || data.inventory.length <= 1) {
       console.info("Enhancing API data with mock inventory items");
-      return mockInventoryData;
+      return inventoryCache;
     }
     
-    return data.inventory;
+    // Update our cache with the API response
+    inventoryCache = data.inventory.map((item, index) => ({
+      ...item,
+      Id: item.Id || String(index + 1)
+    }));
+    
+    return inventoryCache;
   } catch (error) {
     console.error("Error fetching external inventory:", error);
     console.info("Falling back to mock inventory data");
-    return mockInventoryData;
+    return inventoryCache;
   }
 };
 
-// This function would normally send data to the API,
-// but for demo purposes we'll just log it and simulate success
 const updateExternalInventoryItem = async (item: ExternalInventoryItem): Promise<ExternalInventoryItem> => {
   console.log("Updating item:", item);
-  // In a real scenario, we would call the API to update the item
-  // const response = await fetch("https://inventory-api-hybt.onrender.com/api/inventory/update", {
-  //   method: "PUT",
-  //   headers: { "Content-Type": "application/json" },
-  //   body: JSON.stringify(item)
-  // });
-  // if (!response.ok) throw new Error("Failed to update inventory item");
-  // return response.json();
   
-  // For demo, return the modified item directly
-  return item;
+  try {
+    // In a real scenario, we would call the API to update the item
+    // const response = await fetch("https://inventory-api-hybt.onrender.com/api/inventory/update", {
+    //   method: "PUT",
+    //   headers: { "Content-Type": "application/json" },
+    //   body: JSON.stringify(item)
+    // });
+    
+    // For our mock implementation, update the cache
+    const index = inventoryCache.findIndex(i => i.Id === item.Id);
+    if (index !== -1) {
+      inventoryCache[index] = { ...item };
+    }
+    
+    return item;
+  } catch (error) {
+    console.error("Error updating inventory item:", error);
+    throw new Error("Failed to update inventory item");
+  }
+};
+
+const deleteExternalInventoryItem = async (itemId: string): Promise<{ id: string }> => {
+  console.log("Deleting item:", itemId);
+  
+  try {
+    // In a real scenario, we would call the API to delete the item
+    // const response = await fetch(`https://inventory-api-hybt.onrender.com/api/inventory/${itemId}`, {
+    //   method: "DELETE"
+    // });
+    
+    // For our mock implementation, update the cache
+    inventoryCache = inventoryCache.filter(item => item.Id !== itemId);
+    
+    return { id: itemId };
+  } catch (error) {
+    console.error("Error deleting inventory item:", error);
+    throw new Error("Failed to delete inventory item");
+  }
+};
+
+const addExternalInventoryItem = async (item: ExternalInventoryItem): Promise<ExternalInventoryItem> => {
+  console.log("Adding new item:", item);
+  
+  try {
+    // In a real scenario, we would call the API to add the item
+    // const response = await fetch("https://inventory-api-hybt.onrender.com/api/inventory", {
+    //   method: "POST",
+    //   headers: { "Content-Type": "application/json" },
+    //   body: JSON.stringify(item)
+    // });
+    
+    // For our mock implementation, add to cache with a new ID
+    const newId = String(Math.max(...inventoryCache.map(i => Number(i.Id || 0))) + 1);
+    const newItem = { ...item, Id: newId };
+    inventoryCache.push(newItem);
+    
+    return newItem;
+  } catch (error) {
+    console.error("Error adding inventory item:", error);
+    throw new Error("Failed to add inventory item");
+  }
 };
 
 export function useExternalInventory() {
@@ -190,6 +320,28 @@ export function useUpdateExternalInventory() {
     mutationFn: updateExternalInventoryItem,
     onSuccess: () => {
       // Invalidate the external inventory query to refetch data
+      queryClient.invalidateQueries({ queryKey: ['external-inventory'] });
+    },
+  });
+}
+
+export function useDeleteExternalInventory() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: deleteExternalInventoryItem,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['external-inventory'] });
+    },
+  });
+}
+
+export function useAddExternalInventory() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: addExternalInventoryItem,
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['external-inventory'] });
     },
   });

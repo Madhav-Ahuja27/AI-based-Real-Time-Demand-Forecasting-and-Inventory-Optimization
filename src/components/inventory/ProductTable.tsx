@@ -6,28 +6,40 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, ArrowUpDown, Filter, Edit, Save, X } from "lucide-react";
+import { Search, ArrowUpDown, Filter, Edit, Save, X, Trash2, FileDown, FilePlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 interface ProductTableProps {
   products: Product[];
   className?: string;
+  onProductUpdate?: (updatedProduct: Product) => void;
+  onProductDelete?: (productId: string) => void;
 }
 
-export function ProductTable({ products, className }: ProductTableProps) {
+export function ProductTable({ products, className, onProductUpdate, onProductDelete }: ProductTableProps) {
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<keyof Product>("name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [editingProduct, setEditingProduct] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<Partial<Product>>({});
+  const [filterCategory, setFilterCategory] = useState<string | null>(null);
 
-  // Filter products by search term
+  // Get unique categories for filter dropdown
+  const uniqueCategories = Array.from(new Set(products.map(p => p.category)));
+
+  // Filter products by search term and category
   const filteredProducts = products.filter(
-    (product) => 
-      product.name.toLowerCase().includes(search.toLowerCase()) ||
-      product.sku.toLowerCase().includes(search.toLowerCase()) ||
-      product.category.toLowerCase().includes(search.toLowerCase())
+    (product) => {
+      const matchesSearch = 
+        product.name.toLowerCase().includes(search.toLowerCase()) ||
+        product.sku.toLowerCase().includes(search.toLowerCase()) ||
+        product.category.toLowerCase().includes(search.toLowerCase());
+      
+      const matchesCategory = !filterCategory || product.category === filterCategory;
+      
+      return matchesSearch && matchesCategory;
+    }
   );
 
   // Sort products
@@ -68,7 +80,9 @@ export function ProductTable({ products, className }: ProductTableProps) {
       price: product.price,
       minStockLevel: product.minStockLevel,
       maxStockLevel: product.maxStockLevel,
-      reorderPoint: product.reorderPoint
+      reorderPoint: product.reorderPoint,
+      supplier: product.supplier,
+      locationId: product.locationId
     });
   };
 
@@ -79,17 +93,73 @@ export function ProductTable({ products, className }: ProductTableProps) {
   };
 
   // Save changes
-  const saveChanges = (productId: string) => {
-    // In a real application, you would call an API to update the product
-    // For now, we'll just show a success message
-    toast.success("Product updated successfully!");
+  const saveChanges = (product: Product) => {
+    const updatedProduct = {
+      ...product,
+      ...editValues
+    };
+    
+    if (onProductUpdate) {
+      onProductUpdate(updatedProduct);
+    } else {
+      // Fallback implementation if no onProductUpdate prop is provided
+      // In a real app, this would call an API
+      console.log("Updating product:", updatedProduct);
+    }
+    
+    toast.success(`${updatedProduct.name} updated successfully!`);
     setEditingProduct(null);
     setEditValues({});
+  };
+  
+  // Handle product deletion
+  const handleDeleteProduct = (productId: string, productName: string) => {
+    if (onProductDelete) {
+      onProductDelete(productId);
+    } else {
+      // Fallback implementation
+      console.log("Deleting product:", productId);
+    }
+    toast.success(`${productName} has been deleted`);
   };
 
   // Handle input change
   const handleInputChange = (field: keyof Product, value: string | number) => {
     setEditValues(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Export products to CSV
+  const exportToCSV = () => {
+    const headers = [
+      "Name", "SKU", "Category", "Stock Level", 
+      "Min Stock", "Max Stock", "Reorder Point", "Price"
+    ].join(",");
+    
+    const rows = sortedProducts.map(product => [
+      `"${product.name}"`,
+      product.sku,
+      product.category,
+      product.stockLevel,
+      product.minStockLevel,
+      product.maxStockLevel,
+      product.reorderPoint,
+      product.price
+    ].join(","));
+    
+    const csv = [headers, ...rows].join("\n");
+    
+    // Create a blob and download the file
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `inventory-export-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success("Inventory data exported successfully");
   };
 
   // Stock level indicator
@@ -105,10 +175,18 @@ export function ProductTable({ products, className }: ProductTableProps) {
     }
   };
 
+  // Reset all filters
+  const resetFilters = () => {
+    setSearch("");
+    setFilterCategory(null);
+    setSortBy("name");
+    setSortOrder("asc");
+  };
+
   return (
     <div className={className}>
-      <div className="flex items-center justify-between pb-4">
-        <div className="relative w-64">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pb-4">
+        <div className="relative w-full sm:w-64">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search products..."
@@ -117,10 +195,33 @@ export function ProductTable({ products, className }: ProductTableProps) {
             className="w-full pl-8"
           />
         </div>
-        <Button variant="outline" size="sm">
-          <Filter className="mr-2 h-4 w-4" />
-          Filters
-        </Button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          <select 
+            className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+            value={filterCategory || ""}
+            onChange={(e) => setFilterCategory(e.target.value || null)}
+          >
+            <option value="">All Categories</option>
+            {uniqueCategories.map(category => (
+              <option key={category} value={category}>{category}</option>
+            ))}
+          </select>
+          
+          <Button variant="outline" size="sm" onClick={resetFilters}>
+            <Filter className="mr-2 h-4 w-4" />
+            Reset
+          </Button>
+          
+          <Button variant="outline" size="sm" onClick={exportToCSV}>
+            <FileDown className="mr-2 h-4 w-4" />
+            Export
+          </Button>
+          
+          <Button size="sm">
+            <FilePlus className="mr-2 h-4 w-4" />
+            Add New
+          </Button>
+        </div>
       </div>
       <div className="rounded-md border">
         <Table>
@@ -258,7 +359,7 @@ export function ProductTable({ products, className }: ProductTableProps) {
                     <TableCell className="text-right">
                       {isEditing ? (
                         <div className="flex space-x-2 justify-end">
-                          <Button onClick={() => saveChanges(product.id)} size="sm" variant="outline">
+                          <Button onClick={() => saveChanges(product)} size="sm" variant="outline">
                             <Save className="h-4 w-4 mr-1" />
                             Save
                           </Button>
@@ -268,10 +369,20 @@ export function ProductTable({ products, className }: ProductTableProps) {
                           </Button>
                         </div>
                       ) : (
-                        <Button onClick={() => startEditing(product)} size="sm" variant="ghost">
-                          <Edit className="h-4 w-4 mr-1" />
-                          Edit
-                        </Button>
+                        <div className="flex space-x-2 justify-end">
+                          <Button onClick={() => startEditing(product)} size="sm" variant="ghost">
+                            <Edit className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
+                          <Button 
+                            onClick={() => handleDeleteProduct(product.id, product.name)} 
+                            size="sm" 
+                            variant="ghost"
+                            className="text-rose-500 hover:text-rose-700"
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                          </Button>
+                        </div>
                       )}
                     </TableCell>
                   </TableRow>

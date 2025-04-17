@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useProducts, useLocations, useAlerts } from "@/hooks/useInventoryData";
 import { ProductTable } from "@/components/inventory/ProductTable";
@@ -9,11 +10,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Search, MapPin } from "lucide-react";
+import { AlertTriangle, Search, MapPin, FileDown, FilePlus } from "lucide-react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
+import { Product } from "@/lib/mock-data";
 
 export default function InventoryMonitoring() {
-  const { data: products = [], isLoading: isProductsLoading } = useProducts();
+  const { data: products = [], isLoading: isProductsLoading, refetch: refetchProducts } = useProducts();
   const { data: locations = [], isLoading: isLocationsLoading } = useLocations();
   const { data: alerts = [], isLoading: isAlertsLoading } = useAlerts();
   const [selectedLocation, setSelectedLocation] = useState<string>("all");
@@ -33,6 +36,64 @@ export default function InventoryMonitoring() {
   const overstockCount = filteredProducts.filter(p => p.stockLevel > p.maxStockLevel).length;
 
   const isLoading = isProductsLoading || isLocationsLoading || isAlertsLoading;
+
+  // Handle product updates
+  const handleProductUpdate = (updatedProduct: Product) => {
+    // In a real app, this would call an API to update the product
+    console.log("Updated product:", updatedProduct);
+    toast.success(`${updatedProduct.name} updated successfully`);
+    
+    // Refresh the product list
+    setTimeout(() => {
+      refetchProducts();
+    }, 500);
+  };
+
+  // Handle product deletion
+  const handleProductDelete = (productId: string) => {
+    // In a real app, this would call an API to delete the product
+    console.log("Deleting product:", productId);
+    toast.success("Product deleted successfully");
+    
+    // Refresh the product list
+    setTimeout(() => {
+      refetchProducts();
+    }, 500);
+  };
+
+  // Export products to CSV
+  const exportToCSV = () => {
+    const headers = [
+      "Name", "SKU", "Category", "Stock Level", 
+      "Min Stock", "Max Stock", "Reorder Point", "Price"
+    ].join(",");
+    
+    const rows = filteredProducts.map(product => [
+      `"${product.name}"`,
+      product.sku,
+      product.category,
+      product.stockLevel,
+      product.minStockLevel,
+      product.maxStockLevel,
+      product.reorderPoint,
+      product.price
+    ].join(","));
+    
+    const csv = [headers, ...rows].join("\n");
+    
+    // Create a blob and download the file
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `inventory-export-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success("Inventory data exported successfully");
+  };
 
   return (
     <div className="container p-6">
@@ -98,21 +159,41 @@ export default function InventoryMonitoring() {
         </Card>
       </div>
       
-      <div className="mb-6 flex gap-2">
-        <Button 
-          variant={activeView === "list" ? "default" : "outline"} 
-          onClick={() => setActiveView("list")}
-        >
-          List View
-        </Button>
-        <Button 
-          variant={activeView === "map" ? "default" : "outline"} 
-          onClick={() => setActiveView("map")}
-          className="flex items-center gap-2"
-        >
-          <MapPin className="h-4 w-4" />
-          Map View
-        </Button>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <div className="flex gap-2">
+          <Button 
+            variant={activeView === "list" ? "default" : "outline"} 
+            onClick={() => setActiveView("list")}
+          >
+            List View
+          </Button>
+          <Button 
+            variant={activeView === "map" ? "default" : "outline"} 
+            onClick={() => setActiveView("map")}
+            className="flex items-center gap-2"
+          >
+            <MapPin className="h-4 w-4" />
+            Map View
+          </Button>
+        </div>
+        
+        <div className="flex gap-2">
+          <Button 
+            variant="outline"
+            className="flex items-center gap-2"
+            onClick={exportToCSV}
+          >
+            <FileDown className="h-4 w-4" />
+            Export
+          </Button>
+          
+          <Link to="/add-product">
+            <Button className="flex items-center gap-2">
+              <FilePlus className="h-4 w-4" />
+              Add Product
+            </Button>
+          </Link>
+        </div>
       </div>
       
       <div className="mb-6">
@@ -165,7 +246,11 @@ export default function InventoryMonitoring() {
                 <span className="text-muted-foreground">Loading inventory data...</span>
               </div>
             ) : (
-              <ProductTable products={filteredProducts} />
+              <ProductTable 
+                products={filteredProducts} 
+                onProductUpdate={handleProductUpdate}
+                onProductDelete={handleProductDelete}
+              />
             )}
           </CardContent>
         </Card>
@@ -191,7 +276,7 @@ export default function InventoryMonitoring() {
             <Tabs defaultValue="all">
               <TabsList className="mb-4">
                 <TabsTrigger value="all">All Items</TabsTrigger>
-                <TabsTrigger value="low" className="text-rose-500">Low Stock</TabsTrigger>
+                <TabsTrigger value="low" className="text-amber-500">Low Stock</TabsTrigger>
                 <TabsTrigger value="optimal" className="text-emerald-500">Optimal</TabsTrigger>
                 <TabsTrigger value="overstock" className="text-blue-500">Overstock</TabsTrigger>
               </TabsList>
@@ -212,9 +297,15 @@ export default function InventoryMonitoring() {
                               Min: {product.minStockLevel} | Max: {product.maxStockLevel}
                             </p>
                           </div>
-                          <Link to={`/product/${product.id}`}>
-                            <Button variant="outline" size="sm">View</Button>
-                          </Link>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              toast.success(`Viewing details for ${product.name}`);
+                            }}
+                          >
+                            View
+                          </Button>
                         </div>
                       </div>
                     ))}
@@ -241,7 +332,15 @@ export default function InventoryMonitoring() {
                             </p>
                           </div>
                           <Link to="/reordering-system">
-                            <Button variant="outline" size="sm">Order</Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => {
+                                toast.success(`Processing order for ${product.name}`);
+                              }}
+                            >
+                              Order
+                            </Button>
                           </Link>
                         </div>
                       </div>
@@ -267,9 +366,15 @@ export default function InventoryMonitoring() {
                               Optimal: {product.reorderPoint}-{product.maxStockLevel}
                             </p>
                           </div>
-                          <Link to={`/product/${product.id}`}>
-                            <Button variant="outline" size="sm">View</Button>
-                          </Link>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              toast.success(`Viewing details for ${product.name}`);
+                            }}
+                          >
+                            View
+                          </Button>
                         </div>
                       </div>
                     ))}
@@ -294,9 +399,15 @@ export default function InventoryMonitoring() {
                               Max: {product.maxStockLevel}
                             </p>
                           </div>
-                          <Link to={`/product/${product.id}`}>
-                            <Button variant="outline" size="sm">View</Button>
-                          </Link>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              toast.info(`Managing overstock for ${product.name}`);
+                            }}
+                          >
+                            Manage
+                          </Button>
                         </div>
                       </div>
                     ))}

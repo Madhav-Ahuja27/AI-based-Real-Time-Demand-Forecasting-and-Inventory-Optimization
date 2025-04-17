@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, CheckCircle2, RefreshCw, Search, FileDown, Settings } from "lucide-react";
+import { toast } from "sonner";
 
 interface ReorderRecommendation {
   productId: string;
@@ -30,41 +31,49 @@ export default function ReorderingSystem() {
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
   const [reorderDetails, setReorderDetails] = useState<ReorderRecommendation | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState("urgent");
+  const [orderQuantity, setOrderQuantity] = useState<number>(0);
+  const [selectedSupplier, setSelectedSupplier] = useState<string>("");
+  const [deliveryDate, setDeliveryDate] = useState<string>("");
+  const [orderNotes, setOrderNotes] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        setIsLoading(true);
-        const productsData = await fetchProducts();
-        setProducts(productsData);
-        
-        // Get recommendations for products below or near reorder point
-        const productsToCheck = productsData.filter(
-          p => p.stockLevel <= p.reorderPoint * 1.2
-        );
-        
-        const recommendationPromises = productsToCheck.map(p => 
-          getRecommendedReorderAmount(p.id)
-        );
-        
-        const recommendationResults = await Promise.all(recommendationPromises);
-        const recommendationsMap: Record<string, ReorderRecommendation> = {};
-        
-        recommendationResults.forEach(rec => {
-          recommendationsMap[rec.productId] = rec;
-        });
-        
-        setRecommendations(recommendationsMap);
-      } catch (error) {
-        console.error("Error loading reordering data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
     loadData();
   }, []);
+
+  const loadData = async () => {
+    try {
+      setIsLoading(true);
+      const productsData = await fetchProducts();
+      setProducts(productsData);
+      
+      // Get recommendations for products below or near reorder point
+      const productsToCheck = productsData.filter(
+        p => p.stockLevel <= p.reorderPoint * 1.2
+      );
+      
+      const recommendationPromises = productsToCheck.map(p => 
+        getRecommendedReorderAmount(p.id)
+      );
+      
+      const recommendationResults = await Promise.all(recommendationPromises);
+      const recommendationsMap: Record<string, ReorderRecommendation> = {};
+      
+      recommendationResults.forEach(rec => {
+        recommendationsMap[rec.productId] = rec;
+      });
+      
+      setRecommendations(recommendationsMap);
+    } catch (error) {
+      console.error("Error loading reordering data:", error);
+      toast.error("Failed to load reordering data");
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  };
 
   useEffect(() => {
     if (selectedProduct) {
@@ -72,28 +81,128 @@ export default function ReorderingSystem() {
         try {
           const recommendation = await getRecommendedReorderAmount(selectedProduct);
           setReorderDetails(recommendation);
+          setOrderQuantity(recommendation.recommendedQuantity);
+          
+          const product = products.find(p => p.id === selectedProduct);
+          if (product) {
+            setSelectedSupplier(product.supplier || "");
+          }
+          
+          // Set delivery date to 7 days from now by default
+          const date = new Date();
+          date.setDate(date.getDate() + 7);
+          setDeliveryDate(date.toISOString().split('T')[0]);
         } catch (error) {
           console.error("Error loading recommendation:", error);
+          toast.error("Failed to load product reorder details");
         }
       };
       
       loadRecommendation();
     } else {
       setReorderDetails(null);
+      setOrderQuantity(0);
+      setSelectedSupplier("");
+      setDeliveryDate("");
+      setOrderNotes("");
     }
-  }, [selectedProduct]);
+  }, [selectedProduct, products]);
 
-  const urgentProducts = products.filter(p => 
+  // Refresh data
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    loadData();
+    toast.success("Reordering data refreshed");
+  };
+
+  // Export recommendations
+  const handleExport = () => {
+    const headers = [
+      "Product", "SKU", "Current Stock", "Recommended Order", "Status"
+    ].join(",");
+    
+    const rows = products
+      .filter(p => p.stockLevel <= p.reorderPoint * 1.2)
+      .map(product => {
+        const rec = recommendations[product.id];
+        return [
+          `"${product.name}"`,
+          product.sku,
+          product.stockLevel,
+          rec ? rec.recommendedQuantity : 0,
+          product.stockLevel <= product.minStockLevel ? "Critical" : "Reorder Soon"
+        ].join(",");
+      });
+    
+    const csv = [headers, ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `reorder-recommendations-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success("Reorder recommendations exported successfully");
+  };
+
+  // Place order
+  const handlePlaceOrder = () => {
+    if (!reorderDetails) return;
+    
+    if (!orderQuantity) {
+      toast.error("Please enter a valid order quantity");
+      return;
+    }
+    
+    if (!selectedSupplier) {
+      toast.error("Please select a supplier");
+      return;
+    }
+    
+    if (!deliveryDate) {
+      toast.error("Please select an expected delivery date");
+      return;
+    }
+    
+    // In a real app, this would send the order to the backend
+    const product = products.find(p => p.id === selectedProduct);
+    
+    toast.success(`Order placed for ${orderQuantity} units of ${product?.name}`);
+    console.log("Order details:", {
+      productId: selectedProduct,
+      productName: product?.name,
+      quantity: orderQuantity,
+      supplier: selectedSupplier,
+      deliveryDate,
+      notes: orderNotes
+    });
+    
+    // Close the order form
+    setSelectedProduct(null);
+  };
+
+  // Filter products based on search query
+  const filteredProducts = products.filter(product =>
+    searchQuery === "" ||
+    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    product.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    product.category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  
+  const urgentProducts = filteredProducts.filter(p => 
     p.stockLevel <= p.minStockLevel && recommendations[p.id]?.recommendedQuantity > 0
   );
   
-  const recommendedProducts = products.filter(p => 
+  const recommendedProducts = filteredProducts.filter(p => 
     p.stockLevel > p.minStockLevel && 
     p.stockLevel <= p.reorderPoint &&
     recommendations[p.id]?.recommendedQuantity > 0
   );
   
-  const optimalProducts = products.filter(p => 
+  const optimalProducts = filteredProducts.filter(p => 
     p.stockLevel > p.reorderPoint && p.stockLevel <= p.maxStockLevel
   );
 
@@ -112,31 +221,67 @@ export default function ReorderingSystem() {
             value={activeTab}
             onValueChange={setActiveTab}
           >
-            <TabsList className="mb-4">
-              <TabsTrigger value="urgent" className="relative">
-                Urgent
-                {urgentProducts.length > 0 && (
-                  <Badge className="ml-2 bg-rose-500">{urgentProducts.length}</Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="recommended" className="relative">
-                Recommended
-                {recommendedProducts.length > 0 && (
-                  <Badge className="ml-2 bg-amber-500">{recommendedProducts.length}</Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="optimal">Optimal</TabsTrigger>
-            </TabsList>
-            
-            <div className="flex justify-end mb-4">
-              <Button variant="outline" size="sm" className="mr-2">
-                <Settings className="mr-2 h-4 w-4" />
-                Reorder Settings
-              </Button>
-              <Button variant="outline" size="sm">
-                <FileDown className="mr-2 h-4 w-4" />
-                Export List
-              </Button>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+              <TabsList>
+                <TabsTrigger value="urgent" className="relative">
+                  Urgent
+                  {urgentProducts.length > 0 && (
+                    <Badge className="ml-2 bg-rose-500">{urgentProducts.length}</Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="recommended" className="relative">
+                  Recommended
+                  {recommendedProducts.length > 0 && (
+                    <Badge className="ml-2 bg-amber-500">{recommendedProducts.length}</Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="optimal">Optimal</TabsTrigger>
+              </TabsList>
+              
+              <div className="flex gap-2 w-full sm:w-auto">
+                <div className="relative w-full sm:w-auto">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search products..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full sm:w-[200px] pl-8"
+                  />
+                </div>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex items-center gap-1"
+                  onClick={handleRefresh}
+                  disabled={isRefreshing}
+                >
+                  <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+                  Refresh
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-1"
+                  onClick={() => {
+                    toast.info("Opening reorder settings");
+                  }}
+                >
+                  <Settings className="h-4 w-4" />
+                  Settings
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-1"
+                  onClick={handleExport}
+                >
+                  <FileDown className="h-4 w-4" />
+                  Export
+                </Button>
+              </div>
             </div>
             
             <TabsContent value="urgent" className="m-0">
@@ -152,7 +297,16 @@ export default function ReorderingSystem() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {urgentProducts.length > 0 ? (
+                    {isLoading ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="h-24">
+                          <div className="flex justify-center items-center">
+                            <RefreshCw className="h-5 w-5 animate-spin mr-2" />
+                            Loading reorder data...
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ) : urgentProducts.length > 0 ? (
                       urgentProducts.map((product) => (
                         <TableRow key={product.id}>
                           <TableCell>
@@ -205,7 +359,16 @@ export default function ReorderingSystem() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {recommendedProducts.length > 0 ? (
+                    {isLoading ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="h-24">
+                          <div className="flex justify-center items-center">
+                            <RefreshCw className="h-5 w-5 animate-spin mr-2" />
+                            Loading reorder data...
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ) : recommendedProducts.length > 0 ? (
                       recommendedProducts.map((product) => (
                         <TableRow key={product.id}>
                           <TableCell>
@@ -262,41 +425,58 @@ export default function ReorderingSystem() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {optimalProducts.slice(0, 5).map((product) => (
-                      <TableRow key={product.id}>
-                        <TableCell>
-                          <div className="font-medium">{product.name}</div>
-                          <div className="text-xs text-muted-foreground">SKU: {product.sku}</div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="font-medium">{product.stockLevel} units</div>
-                          <div className="text-xs text-muted-foreground">Reorder: {product.reorderPoint}</div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="flex items-center gap-1 bg-emerald-100 text-emerald-800 border-emerald-300">
-                            <CheckCircle2 className="h-3 w-3" />
-                            Optimal
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="font-medium">
-                            {Math.round((product.stockLevel - product.reorderPoint) / product.salesVelocity)} days
+                    {isLoading ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="h-24">
+                          <div className="flex justify-center items-center">
+                            <RefreshCw className="h-5 w-5 animate-spin mr-2" />
+                            Loading inventory data...
                           </div>
-                          <div className="text-xs text-muted-foreground">
-                            At current sales velocity
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => setSelectedProduct(product.id)}
-                          >
-                            View Details
-                          </Button>
                         </TableCell>
                       </TableRow>
-                    ))}
+                    ) : optimalProducts.slice(0, 5).length > 0 ? (
+                      optimalProducts.slice(0, 5).map((product) => (
+                        <TableRow key={product.id}>
+                          <TableCell>
+                            <div className="font-medium">{product.name}</div>
+                            <div className="text-xs text-muted-foreground">SKU: {product.sku}</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium">{product.stockLevel} units</div>
+                            <div className="text-xs text-muted-foreground">Reorder: {product.reorderPoint}</div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="flex items-center gap-1 bg-emerald-100 text-emerald-800 border-emerald-300">
+                              <CheckCircle2 className="h-3 w-3" />
+                              Optimal
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium">
+                              {Math.round((product.stockLevel - product.reorderPoint) / product.salesVelocity)} days
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              At current sales velocity
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => setSelectedProduct(product.id)}
+                            >
+                              View Details
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={5} className="h-24 text-center">
+                          No products at optimal stock level.
+                        </TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </div>
@@ -388,11 +568,18 @@ export default function ReorderingSystem() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Order Quantity</label>
-                      <Input type="number" defaultValue={reorderDetails.recommendedQuantity} />
+                      <Input 
+                        type="number" 
+                        value={orderQuantity} 
+                        onChange={(e) => setOrderQuantity(parseInt(e.target.value) || 0)}
+                      />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Supplier</label>
-                      <Select defaultValue={products.find(p => p.id === selectedProduct)?.supplier || ""}>
+                      <Select 
+                        value={selectedSupplier} 
+                        onValueChange={setSelectedSupplier}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Select supplier" />
                         </SelectTrigger>
@@ -401,6 +588,9 @@ export default function ReorderingSystem() {
                           <SelectItem value="Global Supply Co">Global Supply Co</SelectItem>
                           <SelectItem value="Quality Products Ltd">Quality Products Ltd</SelectItem>
                           <SelectItem value="Prime Distributors">Prime Distributors</SelectItem>
+                          <SelectItem value="Apple Inc.">Apple Inc.</SelectItem>
+                          <SelectItem value="Samsung Electronics">Samsung Electronics</SelectItem>
+                          <SelectItem value="Sony Corporation">Sony Corporation</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -408,7 +598,11 @@ export default function ReorderingSystem() {
                   
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Expected Delivery Date</label>
-                    <Input type="date" />
+                    <Input 
+                      type="date" 
+                      value={deliveryDate}
+                      onChange={(e) => setDeliveryDate(e.target.value)}
+                    />
                   </div>
                   
                   <div className="space-y-2">
@@ -416,6 +610,8 @@ export default function ReorderingSystem() {
                     <textarea 
                       className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
                       placeholder="Add any special instructions for this order"
+                      value={orderNotes}
+                      onChange={(e) => setOrderNotes(e.target.value)}
                     />
                   </div>
                   
@@ -423,7 +619,7 @@ export default function ReorderingSystem() {
                     <Button variant="outline" onClick={() => setSelectedProduct(null)}>
                       Cancel
                     </Button>
-                    <Button>
+                    <Button onClick={handlePlaceOrder}>
                       Place Order
                     </Button>
                   </div>
