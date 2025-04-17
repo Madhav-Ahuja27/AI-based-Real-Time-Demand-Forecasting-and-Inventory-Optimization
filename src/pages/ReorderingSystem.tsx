@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { fetchProducts, fetchProductForecast, getRecommendedReorderAmount } from "@/lib/mock-api";
+import { fetchProducts, fetchProductForecast, getRecommendedReorderAmount, placeOrder } from "@/lib/mock-api";
 import { Product } from "@/lib/mock-data";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { AlertTriangle, CheckCircle2, RefreshCw, Search, FileDown, Settings } from "lucide-react";
+import { AlertTriangle, CheckCircle2, RefreshCw, Search, FileDown, Settings, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface ReorderRecommendation {
@@ -38,6 +38,7 @@ export default function ReorderingSystem() {
   const [deliveryDate, setDeliveryDate] = useState<string>("");
   const [orderNotes, setOrderNotes] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -149,8 +150,8 @@ export default function ReorderingSystem() {
   };
 
   // Place order
-  const handlePlaceOrder = () => {
-    if (!reorderDetails) return;
+  const handlePlaceOrder = async () => {
+    if (!reorderDetails || !selectedProduct) return;
     
     if (!orderQuantity) {
       toast.error("Please enter a valid order quantity");
@@ -167,21 +168,36 @@ export default function ReorderingSystem() {
       return;
     }
     
-    // In a real app, this would send the order to the backend
-    const product = products.find(p => p.id === selectedProduct);
+    setIsPlacingOrder(true);
     
-    toast.success(`Order placed for ${orderQuantity} units of ${product?.name}`);
-    console.log("Order details:", {
-      productId: selectedProduct,
-      productName: product?.name,
-      quantity: orderQuantity,
-      supplier: selectedSupplier,
-      deliveryDate,
-      notes: orderNotes
-    });
-    
-    // Close the order form
-    setSelectedProduct(null);
+    try {
+      // Call the API to place the order and update inventory
+      const success = await placeOrder(
+        selectedProduct,
+        orderQuantity,
+        deliveryDate,
+        selectedSupplier,
+        orderNotes
+      );
+      
+      if (success) {
+        const product = products.find(p => p.id === selectedProduct);
+        toast.success(`Order placed for ${orderQuantity} units of ${product?.name}`);
+        
+        // Refresh the data to show updated inventory levels
+        await loadData();
+        
+        // Close the order form
+        setSelectedProduct(null);
+      } else {
+        toast.error("Failed to place order. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error placing order:", error);
+      toast.error("An error occurred while placing the order");
+    } finally {
+      setIsPlacingOrder(false);
+    }
   };
 
   // Filter products based on search query
@@ -616,11 +632,25 @@ export default function ReorderingSystem() {
                   </div>
                   
                   <div className="pt-4 flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => setSelectedProduct(null)}>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setSelectedProduct(null)}
+                      disabled={isPlacingOrder}
+                    >
                       Cancel
                     </Button>
-                    <Button onClick={handlePlaceOrder}>
-                      Place Order
+                    <Button 
+                      onClick={handlePlaceOrder}
+                      disabled={isPlacingOrder}
+                    >
+                      {isPlacingOrder ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Placing Order...
+                        </>
+                      ) : (
+                        "Place Order"
+                      )}
                     </Button>
                   </div>
                 </div>

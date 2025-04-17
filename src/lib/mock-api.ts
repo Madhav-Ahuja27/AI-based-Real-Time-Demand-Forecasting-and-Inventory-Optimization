@@ -135,6 +135,47 @@ export async function markAlertAsRead(alertId: string): Promise<boolean> {
   return false;
 }
 
+// New function: Update product stock after placing an order
+export async function placeOrder(productId: string, orderQuantity: number, deliveryDate: string, supplier: string, notes: string): Promise<boolean> {
+  if (!mockProducts) initializeMockData();
+  await delay(500);
+  
+  const product = mockProducts?.find(p => p.id === productId);
+  if (!product) return false;
+  
+  // Log the order for debugging
+  console.log("Placing order:", {
+    productId,
+    productName: product.name,
+    quantity: orderQuantity,
+    supplier,
+    deliveryDate,
+    notes
+  });
+  
+  // In a real system, this would create a new order record
+  // For our mock implementation, we'll just update the stock level
+  // assuming the order will arrive and be added to inventory
+  product.stockLevel += orderQuantity;
+  
+  // Also create a new alert about the order
+  if (mockAlerts) {
+    const newAlert: Alert = {
+      id: `order-${Date.now()}`,
+      type: 'order',
+      severity: 'info',
+      title: `Order placed: ${product.name}`,
+      message: `${orderQuantity} units ordered from ${supplier}. Expected delivery: ${deliveryDate}`,
+      createdAt: new Date().toISOString(),
+      read: false,
+      productId: productId
+    };
+    mockAlerts.unshift(newAlert);
+  }
+  
+  return true;
+}
+
 // Function to get recommended reorder amount
 export async function getRecommendedReorderAmount(productId: string): Promise<{
   productId: string;

@@ -11,7 +11,8 @@ import {
   fetchProductById,
   fetchProductSalesHistory,
   fetchProductForecast,
-  getRecommendedReorderAmount
+  getRecommendedReorderAmount,
+  placeOrder
 } from "@/lib/mock-api";
 import { Product, Location, Alert } from "@/lib/mock-data";
 
@@ -102,4 +103,15 @@ export function useReorderRecommendation(productId: string | null) {
     queryFn: () => productId ? getRecommendedReorderAmount(productId) : Promise.resolve(null),
     enabled: !!productId,
   });
+}
+
+// Order placement hook
+export function usePlaceOrder() {
+  return (
+    productId: string,
+    orderQuantity: number,
+    deliveryDate: string,
+    supplier: string,
+    notes: string
+  ) => placeOrder(productId, orderQuantity, deliveryDate, supplier, notes);
 }
