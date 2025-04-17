@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, ArrowUpDown, Filter } from "lucide-react";
+import { Search, ArrowUpDown, Filter, Edit } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ProductTableProps {
@@ -141,7 +141,10 @@ export function ProductTable({ products, className }: ProductTableProps) {
                   <TableCell className="text-right">${product.price.toFixed(2)}</TableCell>
                   <TableCell className="text-right">
                     <Button asChild size="sm" variant="ghost">
-                      <Link to={`/inventory-monitoring/${product.id}`}>View</Link>
+                      <Link to={`/inventory-monitoring/${product.id}`}>
+                        <Edit className="h-4 w-4 mr-1" />
+                        Edit
+                      </Link>
                     </Button>
                   </TableCell>
                 </TableRow>
