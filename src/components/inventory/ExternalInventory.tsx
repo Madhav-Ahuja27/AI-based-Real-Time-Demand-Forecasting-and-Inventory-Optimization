@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { 
   useExternalInventory, 
@@ -26,7 +25,8 @@ import {
   Plus,
   Trash2,
   FileDown,
-  Search
+  Search,
+  Loader2
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -43,7 +43,7 @@ import {
 } from "@/components/ui/dialog";
 
 export function ExternalInventory() {
-  const { data: inventory = [], isLoading, isError, error, refetch } = useExternalInventory();
+  const { data: inventory = [], isLoading, isError, error, refetch, isFetching } = useExternalInventory();
   const { mutate: updateItem, isPending: isUpdating } = useUpdateExternalInventory();
   const { mutate: deleteItem, isPending: isDeleting } = useDeleteExternalInventory();
   const { mutate: addItem, isPending: isAdding } = useAddExternalInventory();
@@ -177,7 +177,6 @@ export function ExternalInventory() {
   };
 
   const handleAddItem = () => {
-    // Validate required fields
     if (!newItem.Product) {
       toast.error("Product name is required");
       return;
@@ -194,7 +193,6 @@ export function ExternalInventory() {
       onSuccess: () => {
         toast.success("New product added successfully");
         setIsAddDialogOpen(false);
-        // Reset form
         setNewItem({
           Product: "",
           Current_Stock: 0,
@@ -233,7 +231,6 @@ export function ExternalInventory() {
     
     const csv = [headers, ...rows].join("\n");
     
-    // Create a blob and download the file
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -400,18 +397,28 @@ export function ExternalInventory() {
       <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <CardTitle>External Inventory</CardTitle>
-          <CardDescription>Live product inventory data</CardDescription>
+          <CardDescription>
+            Live product inventory data from API
+            {isFetching && " (refreshing...)"}
+          </CardDescription>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => refetch()}
-            disabled={isLoading || isUpdating}
+            onClick={() => {
+              toast.info("Refreshing inventory data...");
+              refetch();
+            }}
+            disabled={isFetching}
             className="flex items-center gap-2"
           >
-            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
+            {isFetching ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+            {isFetching ? "Refreshing..." : "Refresh"}
           </Button>
           
           <Button 
@@ -583,13 +590,20 @@ export function ExternalInventory() {
 
           {isLoading ? (
             <div className="h-[200px] flex items-center justify-center">
-              <span className="text-muted-foreground">Loading inventory data...</span>
+              <div className="flex flex-col items-center">
+                <Loader2 className="h-8 w-8 text-primary animate-spin mb-2" />
+                <span className="text-muted-foreground">Loading inventory data from API...</span>
+              </div>
             </div>
           ) : isError ? (
             <div className="h-[200px] flex items-center justify-center flex-col">
               <AlertTriangle className="h-8 w-8 text-destructive mb-2" />
               <span className="text-destructive">Error loading inventory data</span>
-              <p className="text-sm text-muted-foreground">{error instanceof Error ? error.message : 'Unknown error'}</p>
+              <p className="text-sm text-muted-foreground mb-4">{error instanceof Error ? error.message : 'API connection failed'}</p>
+              <Button onClick={() => refetch()} variant="outline">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Retry Connection
+              </Button>
             </div>
           ) : filteredInventory.length === 0 ? (
             <div className="h-[200px] flex items-center justify-center">

@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export interface ExternalInventoryItem {
@@ -21,6 +20,7 @@ interface ExternalInventoryResponse {
   inventory: ExternalInventoryItem[];
 }
 
+// This is our fallback mock data if API fails
 const mockInventoryData: ExternalInventoryItem[] = [
   {
     Id: "1",
@@ -205,37 +205,52 @@ const mockInventoryData: ExternalInventoryItem[] = [
 ];
 
 // In-memory inventory data cache - in a real app, this would be on a server
-let inventoryCache = [...mockInventoryData];
+let inventoryCache: ExternalInventoryItem[] = [];
 
 const fetchExternalInventory = async (): Promise<ExternalInventoryItem[]> => {
+  console.log("Fetching external inventory data from API...");
+  
   try {
-    // Attempt to fetch from the real API first
+    // Fetch from the real API
     const response = await fetch("https://inventory-api-hybt.onrender.com/api/inventory");
     
     if (!response.ok) {
-      console.warn("API request failed, falling back to mock data");
-      return inventoryCache;
+      console.warn(`API request failed with status ${response.status}, falling back to mock data`);
+      return mockInventoryData;
     }
     
     const data: ExternalInventoryResponse = await response.json();
+    console.log("API response received:", data);
     
-    // If the API returns empty or limited data, enhance it with our mock data
-    if (!data.inventory || data.inventory.length <= 1) {
-      console.info("Enhancing API data with mock inventory items");
-      return inventoryCache;
+    // Check if we have valid inventory data
+    if (!data.inventory || data.inventory.length === 0) {
+      console.info("API returned empty inventory, falling back to mock data");
+      return mockInventoryData;
     }
     
-    // Update our cache with the API response
-    inventoryCache = data.inventory.map((item, index) => ({
+    // Process and enhance the API data
+    const processedData = data.inventory.map((item, index) => ({
       ...item,
-      Id: item.Id || String(index + 1)
+      Id: item.Id || `api-${index + 1}`,
+      // Set default values for missing fields
+      SKU: item.SKU || `SKU-${index + 1}`,
+      Category: item.Category || "Uncategorized",
+      Price: item.Price || 0,
+      Supplier: item.Supplier || "Unknown Supplier",
+      Location: item.Location || "Delhi"
     }));
     
-    return inventoryCache;
+    // Update our cache with the processed data
+    inventoryCache = processedData;
+    
+    console.log(`Successfully loaded ${processedData.length} items from API`);
+    return processedData;
   } catch (error) {
     console.error("Error fetching external inventory:", error);
     console.info("Falling back to mock inventory data");
-    return inventoryCache;
+    
+    // If API fetch fails, use mock data
+    return mockInventoryData;
   }
 };
 
@@ -310,6 +325,8 @@ export function useExternalInventory() {
     queryKey: ['external-inventory'],
     queryFn: fetchExternalInventory,
     staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 2, // Retry failed requests up to 2 times
+    refetchOnWindowFocus: true, // Refetch when window regains focus
   });
 }
 
