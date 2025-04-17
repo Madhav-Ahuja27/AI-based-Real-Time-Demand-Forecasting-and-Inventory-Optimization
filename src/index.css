@@ -41,6 +41,14 @@
     --ring: 210 100% 50%;
 
     --radius: 0.5rem; /* More subtle rounded corners */
+    
+    /* Sidebar specific colors */
+    --sidebar: 0 0% 100%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-border: 214 32% 91%;
+    --sidebar-accent: 210 40% 96%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-ring: 210 100% 50%;
   }
 
   .dark {
@@ -78,6 +86,14 @@
     --border: 217 33% 17%;
     --input: 217 33% 17%;
     --ring: 210 100% 50%;
+    
+    /* Sidebar specific colors - dark mode */
+    --sidebar: 222 47% 11%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-border: 217 33% 17%;
+    --sidebar-accent: 217 33% 17%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-ring: 210 100% 50%;
   }
 }
 
@@ -88,6 +104,7 @@
 
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
@@ -128,6 +145,29 @@
   .hover-scale {
     @apply transition-transform duration-200 hover:scale-102;
   }
+  
+  /* Professional card styling */
+  .pro-card {
+    @apply bg-card border border-border rounded-lg shadow-sm hover:shadow-md transition-all duration-300;
+  }
+  
+  /* Dashboard section styling */
+  .dashboard-section {
+    @apply mb-6 p-6 bg-card border border-border rounded-lg shadow-sm;
+  }
+  
+  /* Gradient backgrounds */
+  .bg-gradient-blue {
+    @apply bg-gradient-to-br from-primary to-primary-dark;
+  }
+  
+  .bg-gradient-indigo {
+    @apply bg-gradient-to-br from-secondary to-secondary-dark;
+  }
+  
+  .bg-gradient-teal {
+    @apply bg-gradient-to-br from-accent to-accent-dark;
+  }
 }
 
 /* Custom scrollbar for inventory tables */
@@ -162,4 +202,17 @@
     background: #fff;
     color: #000;
   }
+}
+
+/* Add avatar component styling */
+.avatar {
+  @apply relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full;
+}
+
+.avatar-image {
+  @apply aspect-square h-full w-full;
+}
+
+.avatar-fallback {
+  @apply flex h-full w-full items-center justify-center rounded-full bg-muted;
 }
