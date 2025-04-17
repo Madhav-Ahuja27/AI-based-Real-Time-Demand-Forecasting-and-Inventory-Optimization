@@ -1,6 +1,5 @@
-
 import { useMemo, useState } from "react";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, differenceInDays } from "date-fns";
 import {
   LineChart as RechartsLineChart,
   Line,
@@ -27,6 +26,21 @@ export function DetailedForecastChart({ data, className }: DetailedForecastChart
   const sortedData = useMemo(() => {
     return [...data].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [data]);
+
+  const xAxisTickFormatter = (dateStr: string) => {
+    const date = parseISO(dateStr);
+    if (sortedData.length > 1) {
+      const firstDate = parseISO(sortedData[0].date);
+      const daysDifference = differenceInDays(date, firstDate);
+      
+      if (daysDifference === 0 || 
+          daysDifference === sortedData.length - 1 || 
+          daysDifference % Math.max(1, Math.floor(sortedData.length / 5)) === 0) {
+        return format(date, "MMM d");
+      }
+    }
+    return '';
+  };
 
   const renderTooltip = ({ active, payload, label }: TooltipProps<number, string>) => {
     if (active && payload && payload.length) {
@@ -95,7 +109,7 @@ export function DetailedForecastChart({ data, className }: DetailedForecastChart
               <CartesianGrid strokeDasharray="3 3" vertical={false} />
               <XAxis 
                 dataKey="date" 
-                tickFormatter={(dateStr) => format(parseISO(dateStr), "MM/dd")}
+                tickFormatter={xAxisTickFormatter}
                 tick={{ fontSize: 12 }}
                 padding={{ left: 10, right: 10 }}
               />
