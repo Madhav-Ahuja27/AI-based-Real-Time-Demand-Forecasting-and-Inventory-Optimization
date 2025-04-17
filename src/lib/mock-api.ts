@@ -1,4 +1,3 @@
-
 import { 
   generateProducts, 
   generateSalesHistory, 
@@ -162,10 +161,9 @@ export async function placeOrder(productId: string, orderQuantity: number, deliv
   if (mockAlerts) {
     const newAlert: Alert = {
       id: `order-${Date.now()}`,
-      type: 'reorder', // Fixed from 'order' to 'reorder'
-      severity: 'medium', // Fixed from 'info' to 'medium'
-      title: `Order placed: ${product.name}`,
-      message: `${orderQuantity} units ordered from ${supplier}. Expected delivery: ${deliveryDate}`,
+      type: 'reorder',
+      severity: 'medium',
+      message: `Order placed: ${product.name} - ${orderQuantity} units ordered from ${supplier}. Expected delivery: ${deliveryDate}`,
       createdAt: new Date().toISOString(),
       read: false,
       productId: productId
