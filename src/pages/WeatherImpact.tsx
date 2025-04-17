@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { fetchProducts, fetchProductForecast } from "@/lib/mock-api";
 import { Product, Forecast } from "@/lib/mock-data";
@@ -11,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CloudSun, CloudRain, Umbrella, Snowflake, CloudLightning, ArrowUp, ArrowDown, Loader2 } from "lucide-react";
 import { format, parseISO } from "date-fns";
-import { useWeatherForecast } from "@/hooks/useWeatherData";
+import { useWeatherForecast, locationCityMap } from "@/hooks/useWeatherData";
 import { toast } from "sonner";
 
 export default function WeatherImpact() {
@@ -21,7 +20,6 @@ export default function WeatherImpact() {
   const [selectedLocation, setSelectedLocation] = useState<string>("store-001");
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
 
-  // Use our new weather hook
   const { weatherData, isLoading: isLoadingWeather, isError: isWeatherError, refetch: refetchWeather } = useWeatherForecast(selectedLocation);
 
   useEffect(() => {
@@ -119,9 +117,11 @@ export default function WeatherImpact() {
                   <SelectValue placeholder="Select location" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="store-001">Downtown Store</SelectItem>
-                  <SelectItem value="store-002">Westside Location</SelectItem>
-                  <SelectItem value="warehouse-main">Main Warehouse</SelectItem>
+                  {Object.entries(locationCityMap).map(([id, location]) => (
+                    <SelectItem key={id} value={id}>
+                      {location.displayName}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

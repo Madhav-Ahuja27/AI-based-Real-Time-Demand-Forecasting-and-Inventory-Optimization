@@ -1,4 +1,3 @@
-
 import { subDays, format, addDays } from "date-fns";
 
 // Types
@@ -488,31 +487,41 @@ export function generateWeatherData(days = 7): WeatherData[] {
       let temperature = 15 + Math.floor(Math.random() * 20); // 15-35 degrees
       let precipitation = 0;
       let impact = 0;
+      let humidity = Math.floor(Math.random() * 60) + 30; // 30-90% humidity
+      let windSpeed = Math.floor(Math.random() * 20) + 1; // 1-20 m/s wind speed
       
       // Adjust based on condition
       switch (condition) {
         case 'sunny':
           impact = 0.2;
           precipitation = 0;
+          humidity = Math.floor(Math.random() * 30) + 20; // Lower humidity for sunny days
           break;
         case 'cloudy':
           impact = 0;
           precipitation = Math.random() * 0.5;
+          humidity = Math.floor(Math.random() * 40) + 40; // Medium humidity for cloudy days
           break;
         case 'rainy':
           impact = -0.2;
           precipitation = 2 + Math.random() * 8;
           temperature -= 5;
+          humidity = Math.floor(Math.random() * 30) + 60; // Higher humidity for rainy days
+          windSpeed = Math.floor(Math.random() * 10) + 5; // Moderate wind for rainy days
           break;
         case 'stormy':
           impact = -0.5;
           precipitation = 10 + Math.random() * 20;
           temperature -= 8;
+          humidity = Math.floor(Math.random() * 20) + 70; // Highest humidity for stormy days
+          windSpeed = Math.floor(Math.random() * 15) + 10; // Strong wind for stormy days
           break;
         case 'snowy':
           impact = -0.4;
           precipitation = 5 + Math.random() * 15;
           temperature = -5 + Math.random() * 10;
+          humidity = Math.floor(Math.random() * 30) + 60; // High humidity for snowy days
+          windSpeed = Math.floor(Math.random() * 8) + 2; // Light to moderate wind for snowy days
           break;
       }
       
@@ -522,6 +531,8 @@ export function generateWeatherData(days = 7): WeatherData[] {
         condition,
         temperature,
         precipitation,
+        humidity,
+        windSpeed,
         impact
       });
     });
