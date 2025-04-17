@@ -163,13 +163,19 @@ export default function InventoryMonitoring() {
         <div className="flex gap-2">
           <Button 
             variant={activeView === "list" ? "default" : "outline"} 
-            onClick={() => setActiveView("list")}
+            onClick={() => {
+              setActiveView("list");
+              toast.info("Switched to list view");
+            }}
           >
             List View
           </Button>
           <Button 
             variant={activeView === "map" ? "default" : "outline"} 
-            onClick={() => setActiveView("map")}
+            onClick={() => {
+              setActiveView("map");
+              toast.info("Switched to map view");
+            }}
             className="flex items-center gap-2"
           >
             <MapPin className="h-4 w-4" />
@@ -187,12 +193,13 @@ export default function InventoryMonitoring() {
             Export
           </Button>
           
-          <Link to="/add-product">
-            <Button className="flex items-center gap-2">
-              <FilePlus className="h-4 w-4" />
-              Add Product
-            </Button>
-          </Link>
+          <Button 
+            className="flex items-center gap-2"
+            onClick={() => toast.info("Add product feature coming soon!")}
+          >
+            <FilePlus className="h-4 w-4" />
+            Add Product
+          </Button>
         </div>
       </div>
       
@@ -223,7 +230,10 @@ export default function InventoryMonitoring() {
                 
                 <Select 
                   value={selectedLocation} 
-                  onValueChange={setSelectedLocation}
+                  onValueChange={(value) => {
+                    setSelectedLocation(value);
+                    toast.info(`Filtered by location: ${value === 'all' ? 'All Locations' : locations.find(loc => loc.id === value)?.name || value}`);
+                  }}
                 >
                   <SelectTrigger className="w-full sm:w-[200px]">
                     <SelectValue placeholder="Select location" />
@@ -331,17 +341,15 @@ export default function InventoryMonitoring() {
                               Reorder at: {product.reorderPoint}
                             </p>
                           </div>
-                          <Link to="/reordering-system">
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => {
-                                toast.success(`Processing order for ${product.name}`);
-                              }}
-                            >
-                              Order
-                            </Button>
-                          </Link>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => {
+                              toast.success(`Processing order for ${product.name}`);
+                            }}
+                          >
+                            Order
+                          </Button>
                         </div>
                       </div>
                     ))}

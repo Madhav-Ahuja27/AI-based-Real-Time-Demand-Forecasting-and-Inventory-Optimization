@@ -38,11 +38,11 @@ export function MultiLocationWeather({
 
   const handleRefresh = () => {
     setIsRefreshing(true);
-    refetch();
-    toast.success(`Weather data for ${locationCityMap[selectedLocation].displayName} refreshed`);
-    
-    // Reset refreshing state after a short delay
-    setTimeout(() => setIsRefreshing(false), 1000);
+    refetch().then(() => {
+      toast.success(`Weather data for ${locationCityMap[selectedLocation].displayName} refreshed`);
+      // Reset refreshing state after a short delay
+      setTimeout(() => setIsRefreshing(false), 1000);
+    });
   };
 
   return (
@@ -85,11 +85,6 @@ export function MultiLocationWeather({
                     key={id} 
                     value={id}
                     className="flex-grow mb-1"
-                    onClick={() => {
-                      if (id !== selectedLocation) {
-                        setSelectedLocation(id);
-                      }
-                    }}
                   >
                     {locationCityMap[id].displayName}
                   </TabsTrigger>
@@ -103,7 +98,7 @@ export function MultiLocationWeather({
                   weatherData={id === selectedLocation ? weatherData : []}
                   isLoading={id === selectedLocation && isLoading}
                   isError={id === selectedLocation && isError}
-                  onRefresh={id === selectedLocation ? refetch : undefined}
+                  onRefresh={id === selectedLocation ? handleRefresh : undefined}
                   locationId={id}
                   showLocation={true}
                   className="border-t rounded-none shadow-none"

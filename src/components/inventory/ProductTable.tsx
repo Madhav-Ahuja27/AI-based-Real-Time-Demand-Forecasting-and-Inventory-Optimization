@@ -103,11 +103,10 @@ export function ProductTable({ products, className, onProductUpdate, onProductDe
       onProductUpdate(updatedProduct);
     } else {
       // Fallback implementation if no onProductUpdate prop is provided
-      // In a real app, this would call an API
       console.log("Updating product:", updatedProduct);
+      toast.success(`${updatedProduct.name} updated successfully!`);
     }
     
-    toast.success(`${updatedProduct.name} updated successfully!`);
     setEditingProduct(null);
     setEditValues({});
   };
@@ -119,8 +118,8 @@ export function ProductTable({ products, className, onProductUpdate, onProductDe
     } else {
       // Fallback implementation
       console.log("Deleting product:", productId);
+      toast.success(`${productName} has been deleted`);
     }
-    toast.success(`${productName} has been deleted`);
   };
 
   // Handle input change
@@ -181,6 +180,7 @@ export function ProductTable({ products, className, onProductUpdate, onProductDe
     setFilterCategory(null);
     setSortBy("name");
     setSortOrder("asc");
+    toast.success("Filters reset");
   };
 
   return (
@@ -199,7 +199,10 @@ export function ProductTable({ products, className, onProductUpdate, onProductDe
           <select 
             className="rounded-md border border-input bg-background px-3 py-2 text-sm"
             value={filterCategory || ""}
-            onChange={(e) => setFilterCategory(e.target.value || null)}
+            onChange={(e) => {
+              setFilterCategory(e.target.value || null);
+              toast.info(`Filtered by category: ${e.target.value || "All Categories"}`);
+            }}
           >
             <option value="">All Categories</option>
             {uniqueCategories.map(category => (
@@ -217,7 +220,7 @@ export function ProductTable({ products, className, onProductUpdate, onProductDe
             Export
           </Button>
           
-          <Button size="sm">
+          <Button size="sm" onClick={() => toast.info("Add New Product feature coming soon!")}>
             <FilePlus className="mr-2 h-4 w-4" />
             Add New
           </Button>

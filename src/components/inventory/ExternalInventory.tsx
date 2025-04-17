@@ -64,12 +64,10 @@ export function ExternalInventory() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
 
-  // Get unique categories for filter dropdown
   const uniqueCategories = Array.from(
     new Set(inventory.map(item => item.Category).filter(Boolean))
   );
 
-  // Filter items by search and category
   const filteredInventory = inventory.filter(item => {
     const matchesSearch = 
       (item.Product?.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -122,11 +120,13 @@ export function ExternalInventory() {
       Supplier: item.Supplier || "",
       Location: item.Location || ""
     });
+    toast.info(`Editing ${item.Product}`);
   };
 
   const cancelEditing = () => {
     setEditingItem(null);
     setEditValues({});
+    toast.info("Editing cancelled");
   };
 
   const saveChanges = () => {
@@ -550,8 +550,21 @@ export function ExternalInventory() {
               </div>
               
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
-                <Button onClick={handleAddItem} disabled={isAdding}>Add Item</Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    setIsAddDialogOpen(false);
+                    toast.info("Cancelled adding new item");
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleAddItem} 
+                  disabled={isAdding}
+                >
+                  {isAdding ? "Adding..." : "Add Item"}
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
