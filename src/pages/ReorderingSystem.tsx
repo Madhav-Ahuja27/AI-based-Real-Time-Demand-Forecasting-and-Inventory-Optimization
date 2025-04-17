@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { fetchProducts, fetchProductForecast, getRecommendedReorderAmount, placeOrder } from "@/lib/mock-api";
 import { Product } from "@/lib/mock-data";
@@ -538,3 +539,226 @@ export default function ReorderingSystem() {
                             </TableCell>
                             <TableCell>
                               <Badge variant="outline" className="flex items-center gap-1 bg-amber-100 text-amber-800 border-amber-300">
+                                <AlertTriangle className="h-3 w-3" />
+                                Reorder Soon
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="font-medium">{rec.recommendedQuantity} units</div>
+                              <div className="text-xs text-muted-foreground">{product.leadTime} days lead time</div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button size="sm" variant="outline" onClick={() => setSelectedProduct(product.id)}>
+                                Order
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={6} className="h-24 text-center">
+                          No recommended reorders at this time.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="optimal" className="m-0">
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Product</TableHead>
+                      <TableHead>Current Stock</TableHead>
+                      <TableHead>Predicted Stock</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Reorder Point</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {isLoading ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="h-24">
+                          <div className="flex justify-center items-center">
+                            <RefreshCw className="h-5 w-5 animate-spin mr-2" />
+                            Loading inventory data...
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ) : optimalProducts.length > 0 ? (
+                      optimalProducts.map((product) => {
+                        const predictedStock = forecastDataMap.get(product.name);
+                        
+                        return (
+                          <TableRow key={product.id}>
+                            <TableCell>
+                              <div className="font-medium">{product.name}</div>
+                              <div className="text-xs text-muted-foreground">SKU: {product.sku}</div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="font-medium text-green-500">{product.stockLevel} units</div>
+                              <div className="text-xs text-muted-foreground">Max: {product.maxStockLevel}</div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="font-medium">
+                                {predictedStock !== undefined ? predictedStock.toFixed(2) : "N/A"}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="flex items-center gap-1 bg-green-100 text-green-800 border-green-300">
+                                <CheckCircle2 className="h-3 w-3" />
+                                Optimal
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="font-medium">{product.reorderPoint} units</div>
+                              <div className="text-xs text-muted-foreground">{product.leadTime} days lead time</div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button size="sm" variant="ghost">
+                                Details
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={6} className="h-24 text-center">
+                          No products with optimal stock levels.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+
+      {/* Selected Product Order Details */}
+      {selectedProduct && reorderDetails && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Place Order</CardTitle>
+            <CardDescription>
+              {products.find(p => p.id === selectedProduct)?.name} - SKU: {products.find(p => p.id === selectedProduct)?.sku}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium">Order Quantity</label>
+                  <Input
+                    type="number"
+                    value={orderQuantity}
+                    onChange={(e) => setOrderQuantity(Number(e.target.value))}
+                    className="mt-1"
+                    min={1}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Recommended quantity: {reorderDetails.recommendedQuantity} units
+                  </p>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Expected Delivery Date</label>
+                  <Input
+                    type="date"
+                    value={deliveryDate}
+                    onChange={(e) => setDeliveryDate(e.target.value)}
+                    className="mt-1"
+                    min={new Date().toISOString().split("T")[0]}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Supplier</label>
+                  <Select value={selectedSupplier} onValueChange={setSelectedSupplier}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select supplier" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="supplier1">Acme Electronics</SelectItem>
+                      <SelectItem value="supplier2">Tech Solutions Inc.</SelectItem>
+                      <SelectItem value="supplier3">Global Components Ltd.</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium">Order Notes</label>
+                  <Input
+                    value={orderNotes}
+                    onChange={(e) => setOrderNotes(e.target.value)}
+                    className="mt-1"
+                    placeholder="Add any special instructions"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="bg-muted p-4 rounded-md">
+                  <h3 className="font-medium mb-2">Reorder Recommendation Details</h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Current Stock:</span>
+                      <span>{reorderDetails.reasoning.currentStock} units</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Predicted Stock:</span>
+                      <span>{reorderDetails.reasoning.predictedStock?.toFixed(2) || "N/A"} units</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Avg. Daily Demand:</span>
+                      <span>{reorderDetails.reasoning.avgDailyDemand.toFixed(2)} units/day</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Lead Time:</span>
+                      <span>{reorderDetails.reasoning.leadTime} days</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Safety Stock:</span>
+                      <span>{reorderDetails.reasoning.safetyStock} units</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Weather Impact:</span>
+                      <span>{reorderDetails.reasoning.weatherImpact > 0 ? "+" : ""}{reorderDetails.reasoning.weatherImpact}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Social Media Impact:</span>
+                      <span>{reorderDetails.reasoning.socialImpact > 0 ? "+" : ""}{reorderDetails.reasoning.socialImpact}%</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-2 justify-end mt-6">
+                  <Button variant="outline" onClick={() => setSelectedProduct(null)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handlePlaceOrder} disabled={isPlacingOrder}>
+                    {isPlacingOrder ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Placing Order...
+                      </>
+                    ) : (
+                      "Place Order"
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
