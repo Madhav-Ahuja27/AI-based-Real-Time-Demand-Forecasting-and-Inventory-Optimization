@@ -1,9 +1,9 @@
-
 import { useState } from "react";
 import { useProducts, useLocations, useAlerts } from "@/hooks/useInventoryData";
 import { ProductTable } from "@/components/inventory/ProductTable";
 import { AlertsList } from "@/components/dashboard/AlertsList";
 import Map from "@/components/inventory/Map";
+import { ExternalInventory } from "@/components/inventory/ExternalInventory";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -113,6 +113,10 @@ export default function InventoryMonitoring() {
           <MapPin className="h-4 w-4" />
           Map View
         </Button>
+      </div>
+      
+      <div className="mb-6">
+        <ExternalInventory />
       </div>
       
       {activeView === "list" ? (
